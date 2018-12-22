@@ -12,7 +12,7 @@ quBit H(quBit x);
 
 // Quantum V Gate:-
 // Rotates the Coefficient of Quantum state about Complex Axis.
-void V(float angle, quBit *x);
+quBit S(float angle, quBit x);
 
 // Quantum CNOT Gate (Controlled NOT):-
 // if (x1 == 1) {x2 = X(x2)}
@@ -54,8 +54,8 @@ quBit H(quBit x) {
 	return x;
 }
 
-void V(float angle, quBit *x) {
-
+quBit S(float angle, quBit x) {
+	return x;
 }
 
 void CNOT(quBit *x1, quBit *x2) {

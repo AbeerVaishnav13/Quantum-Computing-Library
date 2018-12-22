@@ -17,6 +17,7 @@ void print(quBit x);
 #include "QuantumGates.h"
 
 #define CHECK(test) ((test) ? 0:1)
+#define PI M_PI
 
 void print(quBit x) {
 	if(x.ZCoeff == 1 && x.OCoeff == 0)
@@ -57,7 +58,11 @@ void Qprint(const char* format,...) {
             		  break;
 
             case 'r': qr = va_arg(arg, quBit*);
-            		  while(qr) {
+            		  while(1) {
+            		  	if(qr[i].ZCoeff == 0 && qr[i].OCoeff == 0)
+            		  		break;
+            		  	printf("\n");
+            		  	printf("%d: ", i);
             		  	print(qr[i++]);
             		  }
         }

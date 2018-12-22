@@ -26,8 +26,11 @@ quBit newQubit() {
 
 quBit* newQuRegister(size_t n) {
 	quBit *qr = (quBit*) malloc(n * sizeof(quBit));
-	for(int i = 0; i < n; i++) {
+	for(int i = 0; i <= n; i++) {
 		qr[i] = newQubit();
+		if(i == n) {
+			qr[i].ZCoeff = qr[i].OCoeff = 0;
+		}
 	}
 
 	return qr;
