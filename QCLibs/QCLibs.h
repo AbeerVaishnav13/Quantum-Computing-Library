@@ -12,6 +12,7 @@ typedef struct qb {
 }quBit;
 
 void print(quBit x);
+void Qprint(const char* format, ...);
 
 #include "QuantumMemAlloc.h"
 #include "QuantumGates.h"
