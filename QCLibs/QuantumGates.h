@@ -15,7 +15,7 @@ quBit H(quBit x);
 quBit S(float angle, quBit x);
 
 // Quantum CNOT Gate (Controlled NOT):-
-// if (x1 == 1) {x2 = X(x2)}
+// if (x1 == |1>) {x2 = X(x2)}
 // else {x2 = x2}
 // "Generally used for entanglement of the Qubits x1 and x2".
 void CNOT(quBit *x1, quBit *x2);

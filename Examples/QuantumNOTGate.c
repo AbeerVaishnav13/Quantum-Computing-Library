@@ -5,6 +5,8 @@ int main(int argc, char const *argv[]) {
 
 	Qprint("x = %q\n", x);
 
+	// Quantum NOT Gate:-
+	// Applies a NOT function to the probabilistic coefficients of the Qubit.
 	x = X(x);
 
 	Qprint("x = %q\n", x);
