@@ -1,7 +1,7 @@
 #include "../QCLibs/QCLibs.h"
 
 int main(int argc, char const *argv[]) {
-	quBit x = newQubit();
+	quBit x = newQubit(0);
 
 	Qprint("x = %q\n", x);
 
