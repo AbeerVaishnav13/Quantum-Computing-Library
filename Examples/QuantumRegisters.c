@@ -11,7 +11,7 @@ int main(int argc, char const *argv[]) {
 
 	CNOT(&x[1], &x[2]);
 
-	x[3] = S(PI/2, x[3]);
+	x[3] = R(PI/2, x[3]);
 
 	Qprint("x = %r\n", x);
 

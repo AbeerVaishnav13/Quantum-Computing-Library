@@ -10,15 +10,12 @@ int main(int argc, char const *argv[]) {
 	// else {x2 = x2}
 	// "Generally used for entanglement of the Qubits x1 and x2".
 	CNOT(&x, &y);
-
 	Qprint("x = %q, y = %q\n", x, y);
 
 	x = X(x);
-
 	Qprint("x = %q, y = %q\n", x, y);
 
 	CNOT(&x, &y);
-
 	Qprint("x = %q, y = %q\n", x, y);
 
 	return 0;

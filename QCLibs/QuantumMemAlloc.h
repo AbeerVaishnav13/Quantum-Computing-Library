@@ -20,26 +20,25 @@ quBit newQubit(int init_state) {
 	quBit qb;
 
 	if(init_state == 0) {
-		qb.ZCoeff = 1.0f;
-		qb.OCoeff = 0.0f;
+		qb.ZCoeff.real = 1.0;
+		qb.OCoeff.real = 0.0;
+		qb.ZCoeff.imag = qb.OCoeff.imag = 0.0;
 	} else if(init_state == 1) {
-		qb.ZCoeff = 0.0f;
-		qb.OCoeff = 1.0f;
-	} else {
-		printf("ERROR: Valid initial states are 0 or 1...\n");
-		free(&qb);
-		exit(0);
+		qb.ZCoeff.real = 0.0;
+		qb.OCoeff.real = 1.0;
+		qb.ZCoeff.imag = qb.OCoeff.imag = 0.0;
 	}
 
 	return qb;
 }
 
 quBit* newQuRegister(size_t n) {
-	quBit *qr = (quBit*) malloc(n * sizeof(quBit));
+	quBit *qr = (quBit*) malloc((n+1) * sizeof(quBit));
 	for(int i = 0; i <= n; i++) {
 		qr[i] = newQubit(0);
 		if(i == n) {
-			qr[i].ZCoeff = qr[i].OCoeff = 0;
+			qr[i].ZCoeff.real = qr[i].OCoeff.real = 0;
+			qr[i].ZCoeff.imag = qr[i].OCoeff.imag = 0;
 		}
 	}
 

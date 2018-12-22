@@ -7,9 +7,16 @@
 #include <math.h>
 #include <stdarg.h>
 
+typedef struct complex {
+	double real, imag;
+}Complex;
+
 typedef struct qb {
-	float ZCoeff, OCoeff;
+	Complex ZCoeff, OCoeff;
 }quBit;
+
+#define CHECK(test) ((test) ? 0:1)
+#define PI M_PI
 
 void print(quBit x);
 void Qprint(const char* format, ...);
@@ -17,21 +24,75 @@ void Qprint(const char* format, ...);
 #include "QuantumMemAlloc.h"
 #include "QuantumGates.h"
 
-#define CHECK(test) ((test) ? 0:1)
-#define PI M_PI
+// Custom round function so as to take care of significant digits after decimal place.
+double __round(double num) {
+	int threshold = 1000000;
+	return (round(num * threshold) / threshold);
+}
 
 void print(quBit x) {
-	if(x.ZCoeff == 1 && x.OCoeff == 0)
-		printf("1 |0>");
-	else if(x.ZCoeff == 0 && x.OCoeff == 1)
-		printf("1 |1>");
-	else {
-		printf("%f |0>", x.ZCoeff);
-		if(x.OCoeff < 0)
-			printf(" - ");
+	int flag0 = 0, flag1 = 0;
+
+	if(__round(x.ZCoeff.real) != 0 || __round(x.ZCoeff.imag) != 0) {
+		if(__round(x.ZCoeff.real) == 0)
+			printf("[");
+		else if(__round(x.ZCoeff.real) == 1) {
+			printf("1");
+			flag0 = 1;
+		}
 		else
+			printf("[%f", x.ZCoeff.real);
+
+		if(x.ZCoeff.imag > 0 && __round(x.OCoeff.real) != 0)
 			printf(" + ");
-		printf("%f |1>", fabs(x.OCoeff));
+		else if(x.ZCoeff.imag < 0 && __round(x.OCoeff.real) != 0)
+			printf(" - ");
+
+		if(__round(x.ZCoeff.imag) == 0) {
+			if(flag0 == 0) {
+				printf("]");
+			}
+		}
+		else if(__round(x.ZCoeff.imag) == 1)
+			printf("i]");
+		else
+			printf("i%f]", fabs(x.ZCoeff.imag));
+
+		printf(" |0>");
+	}
+
+	if((__round(x.ZCoeff.real) == 0 && __round(x.ZCoeff.imag) == 0) || (__round(x.OCoeff.real) == 0 && __round(x.OCoeff.imag) == 0)) {
+
+	} else {
+		printf(" + ");
+	}
+
+	if(x.OCoeff.real != 0 || x.OCoeff.imag != 0) {
+		if(__round(x.OCoeff.real) == 0)
+			printf("[");
+		else if(__round(x.OCoeff.real) == 1) {
+			printf("1");
+			flag1 = 1;
+		}
+		else
+			printf("[%f", x.OCoeff.real);
+
+		if(x.OCoeff.imag > 0 && __round(x.OCoeff.real) != 0)
+			printf(" + ");
+		else if(x.OCoeff.imag < 0 && __round(x.OCoeff.real) != 0)
+			printf(" - ");
+
+		if(__round(x.OCoeff.imag) == 0) {
+			if(flag1 == 0) {
+				printf("]");
+			}
+		}
+		else if(__round(x.OCoeff.imag) == 1)
+			printf("i]");
+		else
+			printf("i%f]", fabs(x.OCoeff.imag));
+
+		printf(" |1>");
 	}
 }
 
@@ -60,15 +121,17 @@ void Qprint(const char* format,...) {
 
             case 'r': qr = va_arg(arg, quBit*);
             		  while(1) {
-            		  	if(qr[i].ZCoeff == 0 && qr[i].OCoeff == 0)
+            		  	if(qr[i].ZCoeff.real == 0 && qr[i].ZCoeff.imag == 0 && qr[i].OCoeff.real == 0 && qr[i].OCoeff.imag == 0)
             		  		break;
             		  	printf("\n");
-            		  	printf("%d: ", i);
+            		  	printf("[%d]: ", i);
             		  	print(qr[i++]);
             		  }
+            		  printf("\n");
         }
     }
 
+    putchar(*traverse);
     putchar(*traverse);
 
     //Module 3: Closing argument list to necessary clean-up
