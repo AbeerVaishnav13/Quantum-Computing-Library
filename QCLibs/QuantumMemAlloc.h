@@ -27,6 +27,9 @@ quBit newQubit(int init_state) {
 		qb.ZCoeff.real = 0.0;
 		qb.OCoeff.real = 1.0;
 		qb.ZCoeff.imag = qb.OCoeff.imag = 0.0;
+	} else {
+		printf("ERROR: Invalid initial state value. It can either be |0> or |1>.\n");
+		exit(0);
 	}
 
 	return qb;
