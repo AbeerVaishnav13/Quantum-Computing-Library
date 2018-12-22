@@ -47,8 +47,8 @@ quBit H(quBit x) {
 		x.OCoeff = (float)-1/sqrt(2);
 	}
 	else {
-		x.ZCoeff = round(x.ZCoeff * (H(newQubit()).ZCoeff + H(X(newQubit())).ZCoeff) * threshold) / threshold;
-		x.OCoeff = round(x.OCoeff * (H(newQubit()).OCoeff + H(X(newQubit())).OCoeff) * threshold) / threshold;
+		x.ZCoeff = round(x.ZCoeff * (H(newQubit(0)).ZCoeff + H(newQubit(1)).ZCoeff) * threshold) / threshold;
+		x.OCoeff = round(x.OCoeff * (H(newQubit(0)).OCoeff + H(newQubit(1)).OCoeff) * threshold) / threshold;
 	}
 
 	return x;
@@ -59,7 +59,7 @@ quBit S(float angle, quBit x) {
 }
 
 void CNOT(quBit *x1, quBit *x2) {
-	if((*x1).OCoeff == 1)
+	if(x1->OCoeff == 1)
 		*x2 = X(*x2);
 	else {}
 }

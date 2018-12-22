@@ -6,6 +6,8 @@ To start working with the Quantum Computing Library Toolkit, first copy the 'QCL
 
 This should include all the functionalities for defining Qubits and doing various Operations on them!
 
+Also see the 'Examples' folder to know nore about the functionality!
+
 Enjoy! :)
 
 Regards
