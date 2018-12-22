@@ -59,7 +59,9 @@ void V(float angle, quBit *x) {
 }
 
 void CNOT(quBit *x1, quBit *x2) {
-	
+	if((*x1).OCoeff == 1)
+		*x2 = X(*x2);
+	else {}
 }
 
 #endif
