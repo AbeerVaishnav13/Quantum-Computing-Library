@@ -48,4 +48,29 @@ quBit* newQuRegister(size_t n) {
 	return qr;
 }
 
+quReg* newQuReg(size_t n) {
+	quReg *qr = (quReg*) malloc(sizeof(quReg));
+
+	qr->qb = (quBit*) malloc((n+1) * sizeof(quBit));
+
+	qr->size = n;
+
+	for(int i = 0; i <= n; i++) {
+		qr->qb[i] = newQubit(0);
+		if(i == n) {
+			qr->qb[i].ZCoeff.real = qr->qb[i].OCoeff.real = 0;
+			qr->qb[i].ZCoeff.imag = qr->qb[i].OCoeff.imag = 0;
+		}
+	}
+
+	qr->matrix = (Complex*) malloc(pow(2, n) * sizeof(Complex));
+	qr->matrix[0].real = 1; qr->matrix[0].imag = 0;
+
+	for(int i = 1; i < pow(2, n); i++) {
+		qr->matrix[i].real = qr->matrix[i].imag = 0;
+	}
+
+	return qr;
+}
+
 #endif

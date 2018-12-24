@@ -15,9 +15,16 @@ typedef struct qb {
 	Complex ZCoeff, OCoeff;
 }quBit;
 
+typedef struct qr {
+	quBit *qb;
+	size_t size;
+	Complex *matrix;
+}quReg;
+
 #define CHECK(test) ((test) ? 0:1)
 #define PI M_PI
 
+double __round(double num);
 void print(quBit x);
 void Qprint(const char* format, ...);
 
@@ -35,13 +42,13 @@ void print(quBit x) {
 
 	if(__round(x.ZCoeff.real) != 0 || __round(x.ZCoeff.imag) != 0) {
 		if(__round(x.ZCoeff.real) == 0)
-			printf("[");
+			printf("{");
 		else if(__round(x.ZCoeff.real) == 1) {
 			printf("1");
 			flag0 = 1;
 		}
 		else
-			printf("[%f", x.ZCoeff.real);
+			printf("{%f", x.ZCoeff.real);
 
 		if(x.ZCoeff.imag > 0 && __round(x.OCoeff.real) != 0)
 			printf(" + ");
@@ -50,13 +57,13 @@ void print(quBit x) {
 
 		if(__round(x.ZCoeff.imag) == 0) {
 			if(flag0 == 0) {
-				printf("]");
+				printf("}");
 			}
 		}
 		else if(__round(x.ZCoeff.imag) == 1)
-			printf("i]");
+			printf("i}");
 		else
-			printf("i%f]", fabs(x.ZCoeff.imag));
+			printf("i%f}", fabs(x.ZCoeff.imag));
 
 		printf(" |0>");
 	}
@@ -69,13 +76,13 @@ void print(quBit x) {
 
 	if(x.OCoeff.real != 0 || x.OCoeff.imag != 0) {
 		if(__round(x.OCoeff.real) == 0)
-			printf("[");
+			printf("{");
 		else if(__round(x.OCoeff.real) == 1) {
 			printf("1");
 			flag1 = 1;
 		}
 		else
-			printf("[%f", x.OCoeff.real);
+			printf("{%f", x.OCoeff.real);
 
 		if(x.OCoeff.imag > 0 && __round(x.OCoeff.real) != 0)
 			printf(" + ");
@@ -84,13 +91,13 @@ void print(quBit x) {
 
 		if(__round(x.OCoeff.imag) == 0) {
 			if(flag1 == 0) {
-				printf("]");
+				printf("}");
 			}
 		}
 		else if(__round(x.OCoeff.imag) == 1)
-			printf("i]");
+			printf("i}");
 		else
-			printf("i%f]", fabs(x.OCoeff.imag));
+			printf("i%f}", fabs(x.OCoeff.imag));
 
 		printf(" |1>");
 	}
@@ -100,7 +107,10 @@ void Qprint(const char* format,...) {
 	const char *traverse;
     quBit qb;
     quBit *qr;
+    quReg *QR;
     int i = 0;
+
+    char buffer[33];
 
     //Module 1: Initializing Myprintf's arguments 
     va_list arg;
@@ -128,6 +138,49 @@ void Qprint(const char* format,...) {
             		  	print(qr[i++]);
             		  }
             		  printf("\n");
+            		  break;
+
+            case 'R': QR = va_arg(arg, quReg*);
+            		  for(i = 0; i < pow(2, QR->size); i++) {
+            		  	if(__round(QR->matrix[i].real) > 0 || __round(QR->matrix[i].imag) > 0) {
+            		  		printf("\n[%d]: {%lf", i, QR->matrix[i].real);
+	        		  		if(QR->matrix[i].imag < 0)
+	        		  			printf(" - ");
+	        		  		else
+	        		  			printf(" + ");
+	        		  		printf("i%lf} |", fabs(QR->matrix[i].imag));
+	        		  		for(int j = 0; j < QR->size; j++) {
+	        		  			int b = (i & (1 << (QR->size - j - 1))) >> (QR->size - j - 1);
+	        		  			printf("%d", b);
+	        		  		}
+            		  		printf(">");
+
+            		  		double mod = sqrt(pow(QR->matrix[i].real, 2) + pow(QR->matrix[i].imag, 2));
+        		  			printf("\t%0.2lf %%", (mod/1*100));
+            		  	}
+            		  }
+            		  printf("\n");
+            		  break;
+
+            case 'a': QR = va_arg(arg, quReg*);
+            		  for(i = 0; i < pow(2, QR->size); i++) {
+        		  		printf("\n[%d]: {%lf", i, QR->matrix[i].real);
+        		  		if(QR->matrix[i].imag < 0)
+        		  			printf(" - ");
+        		  		else
+        		  			printf(" + ");
+        		  		printf("i%lf} |", fabs(QR->matrix[i].imag));
+        		  		for(int j = 0; j < QR->size; j++) {
+        		  			int b = (i & (1 << (QR->size - j - 1))) >> (QR->size - j - 1);
+        		  			printf("%d", b);
+        		  		}
+        		  		printf(">");
+
+        		  		double mod = sqrt(pow(QR->matrix[i].real, 2) + pow(QR->matrix[i].imag, 2));
+        		  		printf("\t%0.2lf %%", (mod/1*100));
+            		  }
+            		  printf("\n");
+            		  break;
         }
     }
 
