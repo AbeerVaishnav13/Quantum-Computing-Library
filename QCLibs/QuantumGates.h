@@ -44,7 +44,7 @@ quReg* S_reg(quReg *qr, int idx);
 
 // Quantum Rotation Gate:-
 // Rotates the Coefficient of Quantum state about Complex Axis.
-// angle should be in PI/i format, where i = 1, 2, 3, ...
+// angle should be in PI/k format, where k = 1, 2, 3, ...
 // For single qubit
 quBit R(double angle, quBit x);
 
@@ -76,10 +76,10 @@ int get_prev_state(quReg *qr, int idx) {
 	int prev_state = 0;
 
 	for(int i = qr->size-1; i >= 0; i--) {
-		if(__round(qr->qb[i].ZCoeff.real) == 1) {
+		if((__round(qr->qb[i].ZCoeff.real) == 1) ^ (__round(qr->qb[i].ZCoeff.imag) == 1)) {
 			prev_state |= 0;
 		}
-		else if(__round(qr->qb[i].OCoeff.real) == 1) {
+		else if((__round(qr->qb[i].OCoeff.real) == 1) ^ (__round(qr->qb[i].OCoeff.imag) == 1)) {
 			prev_state |= 1;
 		}
 
@@ -140,11 +140,28 @@ quBit Y(quBit x) {
 quReg* Y_reg(quReg *qr, int idx) {
 	int prev_state = 0, next_state = 0;
 
+	static int count = 0;
+	int mul_i = 1;
+
 	prev_state = get_prev_state(qr, idx);
 
 	next_state = prev_state ^ (1 << idx);
 
+	printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
+
+
 	qr->qb[idx] = Y(qr->qb[idx]);
+
+	if(fabs(__round(qr->matrix[prev_state].real)) > 0) {
+		double temp = qr->matrix[prev_state].real;
+		qr->matrix[prev_state].real = qr->matrix[next_state].imag;
+		qr->matrix[next_state].imag = temp;
+	}
+	else if(fabs(__round(qr->matrix[prev_state].imag)) > 0) {
+		double temp = qr->matrix[prev_state].imag;
+		qr->matrix[prev_state].imag = -1 * qr->matrix[next_state].real;
+		qr->matrix[next_state].real = -1 * temp;
+	}
 
 	return qr;
 }
@@ -161,12 +178,13 @@ quBit Z(quBit x) {
 }
 
 quReg* Z_reg(quReg *qr, int idx) {
-	quBit qb = newQubit(0);
+	int prev_state, next_state;
 
-	qb.ZCoeff = qr->qb[idx-1].ZCoeff;
+	prev_state = get_prev_state(qr, idx);
 
-	qb.OCoeff.real = -1 * qr->qb[idx-1].OCoeff.real;
-	qb.OCoeff.imag = -1 * qr->qb[idx-1].OCoeff.imag;
+	// next_state;
+
+	qr->qb[idx] = Z(qr->qb[idx]);
 
 	return qr;
 }
@@ -183,6 +201,18 @@ quBit H(quBit x) {
 	return qb;
 }
 
+quReg* H_reg(quReg *qr, int idx) {
+	int prev_state, next_state;
+
+	prev_state = get_prev_state(qr, idx);
+
+	// next_state;
+
+	qr->qb[idx] = H(qr->qb[idx]);
+
+	return qr;
+}
+
 quBit S(quBit x) {
 	quBit qb = newQubit(0);
 
@@ -192,6 +222,18 @@ quBit S(quBit x) {
 	qb.OCoeff.imag = x.OCoeff.real;
 
 	return qb;
+}
+
+quReg* S_reg(quReg *qr, int idx) {
+	int prev_state, next_state;
+
+	prev_state = get_prev_state(qr, idx);
+
+	// next_state;
+
+	qr->qb[idx] = S(qr->qb[idx]);
+
+	return qr;
 }
 
 quBit R(double angle, quBit x) {
@@ -205,6 +247,18 @@ quBit R(double angle, quBit x) {
 	return qb;
 }
 
+quReg* R_reg(double angle, quReg *qr, int idx) {
+	int prev_state, next_state;
+
+	prev_state = get_prev_state(qr, idx);
+
+	// next_state;
+
+	qr->qb[idx] = R(angle, qr->qb[idx]);
+
+	return qr;
+}
+
 void CNOT(quBit *x1, quBit *x2) {
 	quBit qb = newQubit(0);
 
@@ -214,10 +268,38 @@ void CNOT(quBit *x1, quBit *x2) {
 	*x2 = qb;
 }
 
+quReg* CNOT_reg(quReg *qr, int idx1, int idx2) {
+	int prev_state1, next_state1, prev_state2, next_state2;
+
+	prev_state1 = get_prev_state(qr, idx1);
+	prev_state2 = get_prev_state(qr, idx2);
+
+	// next_state1;
+	// next_state2;
+
+	CNOT(&qr->qb[idx1], &qr->qb[idx2]);
+
+	return qr;
+}
+
 void QSwap(quBit *x1, quBit *x2) {
 	quBit temp = *x1;
 	*x1 = *x2;
 	*x2 = temp;
+}
+
+quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
+	int prev_state1, next_state1, prev_state2, next_state2;
+
+	prev_state1 = get_prev_state(qr, idx1);
+	prev_state2 = get_prev_state(qr, idx2);
+
+	// next_state1;
+	// next_state2;
+
+	QSwap(&qr->qb[idx1], &qr->qb[idx2]);
+
+	return qr;
 }
 
 #endif

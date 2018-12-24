@@ -63,7 +63,7 @@ void print(quBit x) {
 		else if(__round(x.ZCoeff.imag) == 1)
 			printf("i}");
 		else
-			printf("i%f}", fabs(x.ZCoeff.imag));
+			printf("%f i}", fabs(x.ZCoeff.imag));
 
 		printf(" |0>");
 	}
@@ -97,7 +97,7 @@ void print(quBit x) {
 		else if(__round(x.OCoeff.imag) == 1)
 			printf("i}");
 		else
-			printf("i%f}", fabs(x.OCoeff.imag));
+			printf("%f i}", fabs(x.OCoeff.imag));
 
 		printf(" |1>");
 	}
@@ -129,26 +129,15 @@ void Qprint(const char* format,...) {
             		  print(qb);
             		  break;
 
-            case 'r': qr = va_arg(arg, quBit*);
-            		  while(1) {
-            		  	if(qr[i].ZCoeff.real == 0 && qr[i].ZCoeff.imag == 0 && qr[i].OCoeff.real == 0 && qr[i].OCoeff.imag == 0)
-            		  		break;
-            		  	printf("\n");
-            		  	printf("[%d]: ", i);
-            		  	print(qr[i++]);
-            		  }
-            		  printf("\n");
-            		  break;
-
-            case 'R': QR = va_arg(arg, quReg*);
+            case 'r': QR = va_arg(arg, quReg*);
             		  for(i = 0; i < pow(2, QR->size); i++) {
             		  	if(__round(QR->matrix[i].real) > 0 || __round(QR->matrix[i].imag) > 0) {
-            		  		printf("\n[%d]: {%lf", i, QR->matrix[i].real);
+            		  		printf("\n[%d]:\t{%lf", i, QR->matrix[i].real);
 	        		  		if(QR->matrix[i].imag < 0)
 	        		  			printf(" - ");
 	        		  		else
 	        		  			printf(" + ");
-	        		  		printf("i%lf} |", fabs(QR->matrix[i].imag));
+	        		  		printf("%lf i} |", fabs(QR->matrix[i].imag));
 	        		  		for(int j = 0; j < QR->size; j++) {
 	        		  			int b = (i & (1 << (QR->size - j - 1))) >> (QR->size - j - 1);
 	        		  			printf("%d", b);
@@ -164,12 +153,12 @@ void Qprint(const char* format,...) {
 
             case 'a': QR = va_arg(arg, quReg*);
             		  for(i = 0; i < pow(2, QR->size); i++) {
-        		  		printf("\n[%d]: {%lf", i, QR->matrix[i].real);
+        		  		printf("\n[%d]:\t{%lf", i, QR->matrix[i].real);
         		  		if(QR->matrix[i].imag < 0)
         		  			printf(" - ");
         		  		else
         		  			printf(" + ");
-        		  		printf("i%lf} |", fabs(QR->matrix[i].imag));
+        		  		printf("%lf i} |", fabs(QR->matrix[i].imag));
         		  		for(int j = 0; j < QR->size; j++) {
         		  			int b = (i & (1 << (QR->size - j - 1))) >> (QR->size - j - 1);
         		  			printf("%d", b);

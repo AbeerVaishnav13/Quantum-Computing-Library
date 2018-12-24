@@ -1,19 +1,25 @@
 #include "../QCLibs/QCLibs.h"
 
 int main(int argc, char const *argv[]) {
-	quBit *x = newQuRegister(4);
+	quReg *x = newQuReg(4);
 
+	// To print only the states which have non-zero probability
 	Qprint("x = %r\n", x);
+	// To print all states
+	Qprint("x = %a\n", x);
 
-	x[0] = H(x[0]);
+	// x = H_reg(x, 0);
 
-	x[1] = X(x[1]);
+	x = X_reg(x, 1);
 
-	CNOT(&x[1], &x[2]);
+	// x = CNOT_reg(x, 1, 2);
 
-	x[3] = R(PI/2, x[3]);
+	// x = R_reg(PI/2, x, 3);
 
+	// To print only the states which have non-zero probability
 	Qprint("x = %r\n", x);
+	// To print all states
+	Qprint("x = %a\n", x);
 
 	return 0;
 }
