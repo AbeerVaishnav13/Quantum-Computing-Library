@@ -87,6 +87,8 @@ int get_prev_state(quReg *qr, int idx) {
 			prev_state <<= 1;
 	}
 
+
+
 	return prev_state;
 }
 
@@ -125,11 +127,48 @@ quReg* X_reg(quReg *qr, int idx) {
 	return qr;
 }
 
+quBit Z(quBit x) {
+	quBit qb = newQubit(0);
+
+	qb.ZCoeff = x.ZCoeff;
+
+	qb.OCoeff.real = x.OCoeff.real;
+	qb.OCoeff.imag = -1 * x.OCoeff.imag;
+
+	return qb;
+}
+
+quReg* Z_reg(quReg *qr, int idx) {
+	int prev_state = 0, next_state = 0;
+
+	prev_state = get_prev_state(qr, idx);
+
+	next_state = prev_state ^ (1 << idx);
+
+	double mod_p = sqrt(pow(qr->matrix[prev_state].real, 2) + pow(qr->matrix[prev_state].imag, 2));
+	double mod_n = sqrt(pow(qr->matrix[next_state].real, 2) + pow(qr->matrix[next_state].imag, 2));;
+
+	qr->qb[idx] = Z(qr->qb[idx]);
+
+	if(fabs(__round(qr->qb[idx].OCoeff.real)) > 0 || fabs(__round(qr->qb[idx].OCoeff.imag)) > 0) {
+		if(mod_n > 0) {
+			qr->matrix[next_state].real *= -1;
+			qr->matrix[next_state].imag *= -1;
+		}
+		else if(mod_p > 0) {
+			qr->matrix[prev_state].real *= -1;
+			qr->matrix[prev_state].imag *= -1;
+		}
+	}
+
+	return qr;
+}
+
 quBit Y(quBit x) {
 	quBit qb = newQubit(0);
 
-	qb.ZCoeff.real = x.OCoeff.imag;
 	qb.ZCoeff.imag = -1 * x.OCoeff.real;
+	qb.ZCoeff.real = x.OCoeff.imag;
 
 	qb.OCoeff.real = -1 * x.ZCoeff.imag;
 	qb.OCoeff.imag = x.ZCoeff.real;
@@ -140,51 +179,29 @@ quBit Y(quBit x) {
 quReg* Y_reg(quReg *qr, int idx) {
 	int prev_state = 0, next_state = 0;
 
-	static int count = 0;
-	int mul_i = 1;
-
 	prev_state = get_prev_state(qr, idx);
 
 	next_state = prev_state ^ (1 << idx);
 
-	printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
-
-
 	qr->qb[idx] = Y(qr->qb[idx]);
 
-	if(fabs(__round(qr->matrix[prev_state].real)) > 0) {
-		double temp = qr->matrix[prev_state].real;
-		qr->matrix[prev_state].real = qr->matrix[next_state].imag;
-		qr->matrix[next_state].imag = temp;
-	}
-	else if(fabs(__round(qr->matrix[prev_state].imag)) > 0) {
-		double temp = qr->matrix[prev_state].imag;
-		qr->matrix[prev_state].imag = -1 * qr->matrix[next_state].real;
-		qr->matrix[next_state].real = -1 * temp;
-	}
+	static int count = 0;
+	int n = count % 4;
+	// printf("count = %d, n = %d\n", count, n);
 
-	return qr;
-}
+	int negate = (n == 0) ? 1 : -1;
 
-quBit Z(quBit x) {
-	quBit qb = newQubit(0);
+	// printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
 
-	qb.ZCoeff = x.ZCoeff;
+	Complex temp = qr->matrix[prev_state];
+	qr->matrix[prev_state] = qr->matrix[next_state];
+	qr->matrix[next_state] = temp;
 
-	qb.OCoeff.real = -1 * x.OCoeff.real;
-	qb.OCoeff.imag = -1 * x.OCoeff.imag;
+	double t = qr->matrix[next_state].real;
+	qr->matrix[next_state].real = negate * qr->matrix[next_state].imag;
+	qr->matrix[next_state].imag = t;
 
-	return qb;
-}
-
-quReg* Z_reg(quReg *qr, int idx) {
-	int prev_state, next_state;
-
-	prev_state = get_prev_state(qr, idx);
-
-	// next_state;
-
-	qr->qb[idx] = Z(qr->qb[idx]);
+	count++;
 
 	return qr;
 }
@@ -206,9 +223,32 @@ quReg* H_reg(quReg *qr, int idx) {
 
 	prev_state = get_prev_state(qr, idx);
 
-	// next_state;
+	next_state = prev_state ^ (1 << idx);
 
 	qr->qb[idx] = H(qr->qb[idx]);
+
+	int negate = (fabs(__round(qr->qb[idx].ZCoeff.imag)) > 0 || fabs(__round(qr->qb[idx].OCoeff.imag)) > 0) ? -1:1;
+
+	// printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
+
+	for(int i = 0; i < qr->size; i++) {
+		if((i >> idx) % 2 == 0) {
+			if(fabs(__round(qr->matrix[i].real)) > 0) {
+				double sum = qr->matrix[i].real + qr->matrix[i + (1 << idx)].real;
+				double diff = qr->matrix[i].real - qr->matrix[i + (1 << idx)].real;
+
+				qr->matrix[i].real = sum / sqrt(2);
+				qr->matrix[i + (1 << idx)].real = diff / sqrt(2);
+			}
+			if(fabs(__round(qr->matrix[i].imag)) > 0) {
+				double sum = qr->matrix[i].imag + qr->matrix[i + (1 << idx)].imag;
+				double diff = qr->matrix[i].imag - qr->matrix[i + (1 << idx)].imag;
+
+				qr->matrix[i].imag = negate * sum / sqrt(2);
+				qr->matrix[i + (1 << idx)].imag = diff / sqrt(2);
+			}
+		}
+	}
 
 	return qr;
 }
