@@ -70,6 +70,10 @@ void QSwap(quBit *x1, quBit *x2);
 quReg* QSwap_reg(quReg *qr, int idx1, int idx2);
 
 
+// Short-hand for applying gates to registers
+quReg* applyGates_reg(const char* gate_string, quReg *qr, O_type output_type);
+
+
 
 // Also some helper functions...
 int get_prev_state(quReg *qr, int idx) {
@@ -341,6 +345,65 @@ quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
 	// next_state2;
 
 	QSwap(&qr->qb[idx1], &qr->qb[idx2]);
+
+	return qr;
+}
+
+
+quReg* applyGates_reg(const char* gate_string, quReg *qr, O_type output_type) {
+	int start_col = 0;
+	int start_func = 0;
+
+	int gate_num = 0;
+
+	for(int i = 0; gate_string[i] != '\0'; i++) {
+		if(gate_string[i] == '{')
+			start_func = 1;
+		else if(gate_string[i] == '}')
+			start_func = 0;
+
+		if(start_func) {
+			if(start_col == 0 && gate_string[i] == '[')
+				start_col = 1;
+			else if(gate_string[i] == ']') {
+				start_col = 0;
+				gate_num = 0;
+			}
+			else if(gate_string[i] == '(') {
+				i++;
+				if(gate_string[i] == 'p') {
+					if(output_type == all)
+						Qprint("qr = %a\n", qr);
+					else if(output_type == non_zero)
+						Qprint("qr = %r\n", qr);
+				}
+			}
+			else if(gate_string[i] == ')') {
+
+			}
+
+			if(start_col) {
+				if(gate_string[i] == ',' || gate_string[i] == ' ') {
+
+				}
+				else if(gate_string[i] == 'X') {
+					qr = X_reg(qr, gate_num);
+					gate_num = (gate_num+1) % qr->size;
+				}
+				else if(gate_string[i] == 'Y') {
+					qr = Y_reg(qr, gate_num);
+					gate_num = (gate_num+1) % qr->size;
+				}
+				else if(gate_string[i] == 'Z') {
+					qr = Z_reg(qr, gate_num);
+					gate_num = (gate_num+1) % qr->size;
+				}
+				else if(gate_string[i] == '1') {
+					gate_num = (gate_num+1) % qr->size;
+				}
+			}
+		}
+	}
 
 	return qr;
 }

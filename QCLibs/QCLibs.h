@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdarg.h>
+#include <string.h>
 
 typedef struct complex {
 	double real, imag;
@@ -20,6 +21,8 @@ typedef struct qr {
 	size_t size;
 	Complex *matrix;
 }quReg;
+
+typedef enum ot {all = 0, non_zero = 1}O_type;
 
 #define CHECK(test) ((test) ? 0:1)
 #define PI M_PI
