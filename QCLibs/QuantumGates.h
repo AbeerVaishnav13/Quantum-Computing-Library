@@ -198,17 +198,13 @@ quReg* Y_reg(quReg *qr, int idx) {
 		neg_o = -1;
 	}
 
-	printf("idx = %d\n", idx);
-
-	printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
-
-	Complex temp = qr->matrix[prev_state];
-	qr->matrix[prev_state] = qr->matrix[next_state];
-	qr->matrix[next_state] = temp;
-
-	double t = qr->matrix[next_state].real;
-	qr->matrix[next_state].real = neg_z * qr->matrix[next_state].imag;
+	double t = qr->matrix[prev_state].real;
+	qr->matrix[prev_state].real = neg_z * qr->matrix[next_state].imag;
 	qr->matrix[next_state].imag = neg_o * t;
+
+	t = qr->matrix[prev_state].imag;
+	qr->matrix[prev_state].imag = neg_o * qr->matrix[next_state].real;
+	qr->matrix[next_state].real = neg_z * t;
 
 	return qr;
 }
