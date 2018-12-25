@@ -103,9 +103,9 @@ quBit X(quBit x) {
 	quBit qb = newQubit(0);
 
 	qb.ZCoeff.real = x.OCoeff.real;
-	qb.OCoeff.real = x.ZCoeff.real;
-
 	qb.ZCoeff.imag = x.OCoeff.imag;
+	
+	qb.OCoeff.real = x.ZCoeff.real;
 	qb.OCoeff.imag = x.ZCoeff.imag;
 
 	return qb;
@@ -167,8 +167,8 @@ quReg* Z_reg(quReg *qr, int idx) {
 quBit Y(quBit x) {
 	quBit qb = newQubit(0);
 
-	qb.ZCoeff.imag = -1 * x.OCoeff.real;
 	qb.ZCoeff.real = x.OCoeff.imag;
+	qb.ZCoeff.imag = -1 * x.OCoeff.real;
 
 	qb.OCoeff.real = -1 * x.ZCoeff.imag;
 	qb.OCoeff.imag = x.ZCoeff.real;
@@ -178,30 +178,37 @@ quBit Y(quBit x) {
 
 quReg* Y_reg(quReg *qr, int idx) {
 	int prev_state = 0, next_state = 0;
+	int prev_bit = 0, next_bit = 0;
+	int neg_z, neg_o;
 
 	prev_state = get_prev_state(qr, idx);
-
 	next_state = prev_state ^ (1 << idx);
+
+	prev_bit = (prev_state & (1 << idx)) >> idx;
+	next_bit = (next_state & (1 << idx)) >> idx;
 
 	qr->qb[idx] = Y(qr->qb[idx]);
 
-	static int count = 0;
-	int n = count % 4;
-	// printf("count = %d, n = %d\n", count, n);
+	if(prev_bit == 0 && next_bit == 1) {
+		neg_z = -1;
+		neg_o = 1;
+	}
+	else if(prev_bit == 1 && next_bit == 0) {
+		neg_z = 1;
+		neg_o = -1;
+	}
 
-	int negate = (n == 0) ? 1 : -1;
+	printf("idx = %d\n", idx);
 
-	// printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
+	printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
 
 	Complex temp = qr->matrix[prev_state];
 	qr->matrix[prev_state] = qr->matrix[next_state];
 	qr->matrix[next_state] = temp;
 
 	double t = qr->matrix[next_state].real;
-	qr->matrix[next_state].real = negate * qr->matrix[next_state].imag;
-	qr->matrix[next_state].imag = t;
-
-	count++;
+	qr->matrix[next_state].real = neg_z * qr->matrix[next_state].imag;
+	qr->matrix[next_state].imag = neg_o * t;
 
 	return qr;
 }
