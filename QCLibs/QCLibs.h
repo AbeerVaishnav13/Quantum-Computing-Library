@@ -22,8 +22,6 @@ typedef struct qr {
 	Complex *matrix;
 }quReg;
 
-typedef enum ot {all = 0, non_zero = 1}O_type;
-
 #define CHECK(test) ((test) ? 0:1)
 #define PI M_PI
 

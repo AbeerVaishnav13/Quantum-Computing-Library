@@ -71,7 +71,7 @@ quReg* QSwap_reg(quReg *qr, int idx1, int idx2);
 
 
 // Short-hand for applying gates to registers
-quReg* applyGates_reg(const char* gate_string, quReg *qr, O_type output_type);
+quReg* applyGates_reg(const char* gate_string, quReg *qr);
 
 
 
@@ -350,7 +350,7 @@ quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
 }
 
 
-quReg* applyGates_reg(const char* gate_string, quReg *qr, O_type output_type) {
+quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 	int start_col = 0;
 	int start_func = 0;
 
@@ -371,10 +371,11 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr, O_type output_type) {
 			}
 			else if(gate_string[i] == '(') {
 				i++;
-				if(gate_string[i] == 'p') {
-					if(output_type == all)
+				if(gate_string[i] == 'P') {
+					i++;
+					if(gate_string[i] == 'a')
 						Qprint("qr = %a\n", qr);
-					else if(output_type == non_zero)
+					else if(gate_string[i] == ')' || (gate_string[i] == 'n' && gate_string[++i] == 'z'))
 						Qprint("qr = %r\n", qr);
 				}
 			}
