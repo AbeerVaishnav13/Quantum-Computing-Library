@@ -353,34 +353,53 @@ quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
 quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 	int start_col = 0;
 	int start_func = 0;
+	int text_start = 0;
 
 	int gate_num = 0;
 
+	char msg[25] = "\0";
+	int msg_idx = 0;
+
 	for(int i = 0; gate_string[i] != '\0'; i++) {
-		if(gate_string[i] == '{')
+		if(gate_string[i] == '(') {
+			i++;
+			if(gate_string[i] == 'T') {
+				i++;
+				while(gate_string[i] != ')') {
+					if((gate_string[i] == ' ' || gate_string[i] == ':') && text_start == 0) {
+					}
+					else {
+						msg[msg_idx] = gate_string[i];
+						msg_idx++;
+						text_start = 1;
+					}
+					i++;
+				}
+				msg[msg_idx] = '\0';
+			}
+			else if(gate_string[i] == 'P') {
+				i++;
+				if(gate_string[i] == 'a') {
+					printf("%s", msg);
+					Qprint("%a\n", qr);
+				}
+				else if(gate_string[i] == ')' || (gate_string[i] == 'n' && gate_string[++i] == 'z')) {
+					printf("%s", msg);
+					Qprint("%r\n", qr);
+				}
+			}
+		}
+		else if(gate_string[i] == '{')
 			start_func = 1;
 		else if(gate_string[i] == '}')
 			start_func = 0;
 
-		if(start_func) {
+		else if(start_func) {
 			if(start_col == 0 && gate_string[i] == '[')
 				start_col = 1;
 			else if(gate_string[i] == ']') {
 				start_col = 0;
 				gate_num = 0;
-			}
-			else if(gate_string[i] == '(') {
-				i++;
-				if(gate_string[i] == 'P') {
-					i++;
-					if(gate_string[i] == 'a')
-						Qprint("qr = %a\n", qr);
-					else if(gate_string[i] == ')' || (gate_string[i] == 'n' && gate_string[++i] == 'z'))
-						Qprint("qr = %r\n", qr);
-				}
-			}
-			else if(gate_string[i] == ')') {
-
 			}
 
 			if(start_col) {
@@ -403,6 +422,10 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 					gate_num = (gate_num+1) % qr->size;
 				}
 			}
+		}
+
+		else {
+			
 		}
 	}
 
