@@ -102,6 +102,7 @@ int get_prev_state(quReg *qr, int idx) {
 //
 //
 //
+//
 
 quBit X(quBit x) {
 	quBit qb = newQubit(0);
@@ -123,6 +124,8 @@ quReg* X_reg(quReg *qr, int idx) {
 	next_state = prev_state ^ (1 << idx);
 
 	qr->qb[idx] = X(qr->qb[idx]);
+
+	// qr = updateMatrix(qr, idx);
 
 	double temp = qr->matrix[prev_state].real;
 	qr->matrix[prev_state].real = qr->matrix[next_state].real;
@@ -227,32 +230,37 @@ quBit H(quBit x) {
 
 quReg* H_reg(quReg *qr, int idx) {
 	int prev_state, next_state;
+	int count = 0;
 
 	prev_state = get_prev_state(qr, idx);
 
 	next_state = prev_state ^ (1 << idx);
 
+	printf("idx = %d, prev_state = %d, next_state = %d\n", idx, prev_state, next_state);
+
 	qr->qb[idx] = H(qr->qb[idx]);
 
+	// Used only for pauli Y gate i.e. imaginary values
 	int negate = (fabs(__round(qr->qb[idx].ZCoeff.imag)) > 0 || fabs(__round(qr->qb[idx].OCoeff.imag)) > 0) ? -1:1;
+	printf("negate = %d\n", negate);
 
-	// printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
-
-	for(int i = 0; i < qr->size; i++) {
-		if((i >> idx) % 2 == 0) {
+	for(int i = 0; i < pow(2, qr->size-1); i++) {
+		int next_i = i + (1 << idx);
+			if(i >> idx == 0) {
 			if(fabs(__round(qr->matrix[i].real)) > 0) {
-				double sum = qr->matrix[i].real + qr->matrix[i + (1 << idx)].real;
-				double diff = qr->matrix[i].real - qr->matrix[i + (1 << idx)].real;
+				double sum = qr->matrix[i].real + qr->matrix[next_i].real;
+				double diff = qr->matrix[i].real - qr->matrix[next_i].real;
 
 				qr->matrix[i].real = sum / sqrt(2);
-				qr->matrix[i + (1 << idx)].real = diff / sqrt(2);
+				qr->matrix[next_i].real = diff / sqrt(2);
+
 			}
 			if(fabs(__round(qr->matrix[i].imag)) > 0) {
-				double sum = qr->matrix[i].imag + qr->matrix[i + (1 << idx)].imag;
-				double diff = qr->matrix[i].imag - qr->matrix[i + (1 << idx)].imag;
+				double sum = qr->matrix[i].imag + qr->matrix[next_i].imag;
+				double diff = qr->matrix[i].imag - qr->matrix[next_i].imag;
 
 				qr->matrix[i].imag = negate * sum / sqrt(2);
-				qr->matrix[i + (1 << idx)].imag = diff / sqrt(2);
+				qr->matrix[next_i].imag = diff / sqrt(2);
 			}
 		}
 	}
@@ -416,6 +424,10 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 				}
 				else if(gate_string[i] == 'Z') {
 					qr = Z_reg(qr, gate_num);
+					gate_num = (gate_num+1) % qr->size;
+				}
+				else if(gate_string[i] == 'H') {
+					qr = H_reg(qr, gate_num);
 					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == '1') {

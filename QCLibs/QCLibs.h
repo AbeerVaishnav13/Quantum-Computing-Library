@@ -146,7 +146,7 @@ void Qprint(const char* format,...) {
 	        		  		printf(">");
 
 	        		  		double mod = sqrt(pow(QR->matrix[i].real, 2) + pow(QR->matrix[i].imag, 2));
-	        		  		printf("\t%0.3lf %%", (mod/1*100));
+	        		  		printf("\t%0.3lf %%", (pow(mod, 2)/1*100));
 	        		  	}
             		  }
             		  printf("\n");
@@ -167,7 +167,7 @@ void Qprint(const char* format,...) {
         		  		printf(">");
 
         		  		double mod = sqrt(pow(QR->matrix[i].real, 2) + pow(QR->matrix[i].imag, 2));
-        		  		printf("\t%0.3lf %%", (mod/1*100));
+        		  		printf("\t%0.3lf %%", (pow(mod, 2)/1*100));
             		  }
             		  printf("\n");
             		  break;
