@@ -103,10 +103,7 @@ int bit_parity(int i) {
 }
 
 int product(int a, int b) {
-	int i = a & b;
-	for(int j = 16; j > 0; j /= 2)
-		i = (i >> j) ^ i;
-	return (i % 2);
+	return bit_parity(a & b);
 }
 
 Complex *mat;
