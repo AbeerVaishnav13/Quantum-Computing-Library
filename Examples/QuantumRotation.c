@@ -33,5 +33,16 @@ int main(int argc, char const *argv[]) {
 	quBit qb6 = R(PI/8, x);
 	Qprint("qb6 = %q\n", qb6);
 
+
+	////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////
+	// Alternate way for writing the same operations for qubit registers...
+
+	quReg *qr = newQuReg(2);
+
+	char gate_string[] = "(T: quReg2 = ), (Pa), {[X(Pnz), 1], [R_10.25(Pnz), 1]}, (Pa)";
+
+	qr = applyGates_reg(gate_string, qr);
+
 	return 0;
 }

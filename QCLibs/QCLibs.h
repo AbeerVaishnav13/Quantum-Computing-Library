@@ -7,6 +7,7 @@
 #include <math.h>
 #include <stdarg.h>
 #include <string.h>
+#include<ctype.h>
 
 typedef struct complex {
 	double real, imag;
