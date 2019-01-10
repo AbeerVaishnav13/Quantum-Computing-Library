@@ -244,17 +244,12 @@ quReg* H_reg(quReg *qr, int idx) {
 
 	for(int prev_state = get_prev_state(qr, idx); count < len; prev_state = ((prev_state + increment) % mat_size), count++) {
 		next_state = prev_state + offset;
-		temp_ps_real = qr->matrix[prev_state].real;
-		temp_ps_imag = qr->matrix[prev_state].imag;
+		
+		qr->matrix[prev_state].real = (qr->matrix[prev_state].real + qr->matrix[next_state].real) / sqrt(2);
+		qr->matrix[next_state].real = (qr->matrix[prev_state].real - qr->matrix[next_state].real) / sqrt(2);
 
-		temp_ns_real = qr->matrix[next_state].real;
-		temp_ns_imag = qr->matrix[next_state].imag;
-
-		qr->matrix[prev_state].real = (temp_ps_real + temp_ns_real) / sqrt(2);
-		qr->matrix[next_state].real = (temp_ps_real - temp_ns_real) / sqrt(2);
-
-		qr->matrix[prev_state].imag = (temp_ps_imag + temp_ns_imag) / sqrt(2);
-		qr->matrix[next_state].imag = (temp_ps_imag - temp_ns_imag) / sqrt(2);
+		qr->matrix[prev_state].imag = (qr->matrix[prev_state].imag + qr->matrix[next_state].imag) / sqrt(2);
+		qr->matrix[next_state].imag = (qr->matrix[prev_state].imag - qr->matrix[next_state].imag) / sqrt(2);
 	}
 	return qr;
 }
