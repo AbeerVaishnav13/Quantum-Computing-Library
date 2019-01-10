@@ -32,7 +32,7 @@ quReg* Z_reg(quReg *qr, int idx);
 quBit H(quBit x);
 
 // For register of qubits
-quReg* H_reg(quReg *qr, int idx, int all);
+quReg* H_reg(quReg *qr, int idx);
 
 //Quantum Phase Gate:-
 // Changes the phase of the qubit
@@ -80,10 +80,10 @@ int get_prev_state(quReg *qr, int idx) {
 	int prev_state = 0;
 
 	for(int i = qr->size-1; i >= 0; i--) {
-		if((__round(qr->qb[i].ZCoeff.real) == 1) ^ (__round(qr->qb[i].ZCoeff.imag) == 1)) {
+		if((fabs(__round(qr->qb[i].ZCoeff.real)) > 0) || (fabs(__round(qr->qb[i].ZCoeff.imag)) > 0)) {
 			prev_state |= 0;
 		}
-		else if((__round(qr->qb[i].OCoeff.real) == 1) ^ (__round(qr->qb[i].OCoeff.imag) == 1)) {
+		else if((fabs(__round(qr->qb[i].OCoeff.real)) > 0) || (fabs(__round(qr->qb[i].OCoeff.imag)) > 0)) {
 			prev_state |= 1;
 		}
 
@@ -140,8 +140,6 @@ quReg* X_reg(quReg *qr, int idx) {
 	next_state = prev_state ^ (1 << idx);
 
 	qr->qb[idx] = X(qr->qb[idx]);
-
-	// qr = updateMatrix(qr, idx);
 
 	double temp = qr->matrix[prev_state].real;
 	qr->matrix[prev_state].real = qr->matrix[next_state].real;
@@ -230,65 +228,35 @@ quBit H(quBit x) {
 	return qb;
 }
 
-quReg* H_reg(quReg *qr, int idx, int all) {
-	// Complex *sample = mat;
-	// int h;
-	// int size;
+quReg* H_reg(quReg *qr, int idx) {
 
-	// if(all) {
-	// 	h = 1;
-	// 	size = pow(2, qr->size);
-	// }
-	// else {
-	// 	h = pow(2, idx);
-	// 	size = h * 2;
-	// }
+	qr->qb[idx] = H(qr->qb[idx]);
 
+	int increment = 1;
+	static int len = 0;
+	len = pow(2, len);
+	int mat_size = pow(2, qr->size);
+	int offset = pow(2, idx);
+	int next_state = 0;
+	int count = 0;
 
+	double temp_ps_real, temp_ps_imag, temp_ns_real, temp_ns_imag;
 
-	// while(h < size) {
-	// 	for(int i = 0; i < size; i += 2*h) {
-	// 		for (int j = i; j < i+h; j++) {
-	// 			double x_real = sample[j].real;
-	// 			double y_real = sample[j+h].real;
+	for(int prev_state = get_prev_state(qr, idx); count < len; prev_state = ((prev_state + increment) % mat_size), count++) {
+		next_state = prev_state + offset;
+		temp_ps_real = qr->matrix[prev_state].real;
+		temp_ps_imag = qr->matrix[prev_state].imag;
 
-	// 			double x_imag = sample[j].imag;
-	// 			double y_imag = sample[j+h].imag;
+		temp_ns_real = qr->matrix[next_state].real;
+		temp_ns_imag = qr->matrix[next_state].imag;
 
-	// 			sample[j].real = __round((x_real + y_real) / sqrt(2));
-	// 			sample[j+h].real = __round((x_real - y_real) / sqrt(2));
+		qr->matrix[prev_state].real = (temp_ps_real + temp_ns_real) / sqrt(2);
+		qr->matrix[next_state].real = (temp_ps_real - temp_ns_real) / sqrt(2);
 
-	// 			sample[j].imag = __round((x_imag + y_imag) / sqrt(2));
-	// 			sample[j+h].imag = __round((x_imag - y_imag) / sqrt(2));
-	// 		}
-	// 	}
-	// 	h *= 2;
-
-	// 	qr->matrix = sample;
-	// }
-
-	// Complex *temp = (newQuReg(qr->size)->matrix);
-	// Complex *sample = mat;
-
-	// temp[0].real = 0;
-
-	// double limit = pow(2, (idx+1));
-
-	// for(int i = 0; i < limit; i++) {
-	// 	for(int j = 0; j < pow(2, (idx+1)); j++) {
-	// 		int prod = product(i, j);
-	// 		double div = pow(2, (double)(idx+1)/2);
-	// 		double H_ij = pow(-1, prod) / div;
-	// 		temp[i].real = temp[i].real + H_ij * sample[j].real;
-	// 		temp[i].imag = temp[i].imag +  H_ij * sample[j].imag;
-	// 	}
-	// 	printf("temp_real = %lf, temp_imag = %lf\n", temp[i].real, temp[i].imag);
-	// }
-
-	// for(int i = 0; i < pow(2, (idx+1)); i++) {
-	// 	qr->matrix[i] = temp[i];
-	// }
-	// return qr;
+		qr->matrix[prev_state].imag = (temp_ps_imag + temp_ns_imag) / sqrt(2);
+		qr->matrix[next_state].imag = (temp_ps_imag - temp_ns_imag) / sqrt(2);
+	}
+	return qr;
 }
 
 quBit S(quBit x) {
@@ -382,15 +350,27 @@ void QSwap(quBit *x1, quBit *x2) {
 }
 
 quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
-	int prev_state1, next_state1, prev_state2, next_state2;
+	int next_state, prev_state;
+	printf("idx1 = %d, idx2 = %d\n", idx1, idx2);
 
-	prev_state1 = get_prev_state(qr, idx1);
-	prev_state2 = get_prev_state(qr, idx2);
+	prev_state = get_prev_state(qr, idx1);
 
-	// next_state1;
-	// next_state2;
+	int test_idx1 = (prev_state ^ (1 << idx1)) >> idx1;
+	int test_idx2 = (prev_state ^ (1 << idx2)) >> idx2;
+	printf("test_idx1 = %d, test_idx2 = %d\n", test_idx1, test_idx2);
+
+	if(!(test_idx1 ^ test_idx2))
+		next_state = prev_state;
+	else if(test_idx1 ^ test_idx2)
+		next_state = (prev_state ^ (1 << idx1)) ^ (1 << idx2);
+
+	printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
 
 	QSwap(&qr->qb[idx1], &qr->qb[idx2]);
+
+	Complex temp = qr->matrix[prev_state];
+	qr->matrix[prev_state] = qr->matrix[next_state];
+	qr->matrix[next_state] = temp;
 
 	return qr;
 }
@@ -458,29 +438,39 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 				}
 				else if(gate_string[i] == 'X') {
 					qr = X_reg(qr, gate_num);
-					updateMatrix(qr);
 					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'Y') {
 					qr = Y_reg(qr, gate_num);
-					updateMatrix(qr);
 					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'Z') {
 					qr = Z_reg(qr, gate_num);
-					updateMatrix(qr);
 					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'H') {
-					qr = H_reg(qr, gate_num, 0);
-					if(gate_num == qr->size-1)
-						qr = H_reg(qr, gate_num, 1);
+					qr = H_reg(qr, gate_num);
 					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'S') {
 					if(gate_string[++i] == 'x') {
+						i += 2;
+						int idx1, idx2;
+						int switch_idx = 0;
+						for(int j = 0; ; i++) {
+							if(gate_string[i] == '/')
+								switch_idx = 1;
+							if(isalnum(gate_string[i])) {
+								if(!switch_idx)
+									idx1  = idx1 * 10 + (gate_string[i] - '0');
+								else if(switch_idx)
+									idx2  = idx2 * 10 + (gate_string[i] - '0');
+							}
+
+							if(gate_string[i] == '(' || gate_string[i] == ',')
+								break;
+						}
 						QSwap_reg(qr, 0, 1);
-						updateMatrix(qr);
 					}
 					else {
 						qr = S_reg(qr, gate_num);
