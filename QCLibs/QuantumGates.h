@@ -240,16 +240,24 @@ quReg* H_reg(quReg *qr, int idx) {
 	int next_state = 0;
 	int count = 0;
 
-	double temp_ps_real, temp_ps_imag, temp_ns_real, temp_ns_imag;
+	double temp_ps_real, temp_ns_real, temp_ps_imag, temp_ns_imag;
 
-	for(int prev_state = get_prev_state(qr, idx); count < len; prev_state = ((prev_state + increment) % mat_size), count++) {
+	for(int prev_state = get_prev_state(qr, idx); count < len; count++) {
 		next_state = prev_state + offset;
-		
-		qr->matrix[prev_state].real = (qr->matrix[prev_state].real + qr->matrix[next_state].real) / sqrt(2);
-		qr->matrix[next_state].real = (qr->matrix[prev_state].real - qr->matrix[next_state].real) / sqrt(2);
 
-		qr->matrix[prev_state].imag = (qr->matrix[prev_state].imag + qr->matrix[next_state].imag) / sqrt(2);
-		qr->matrix[next_state].imag = (qr->matrix[prev_state].imag - qr->matrix[next_state].imag) / sqrt(2);
+		temp_ps_real = qr->matrix[prev_state].real;
+		temp_ps_imag = qr->matrix[prev_state].imag;
+
+		temp_ns_real = qr->matrix[next_state].real;
+		temp_ns_imag = qr->matrix[next_state].imag;
+		
+		qr->matrix[prev_state].real = (temp_ps_real + temp_ns_real) / sqrt(2);
+		qr->matrix[next_state].real = (temp_ps_real - temp_ns_real) / sqrt(2);
+
+		qr->matrix[prev_state].imag = (temp_ps_imag + temp_ns_imag) / sqrt(2);
+		qr->matrix[next_state].imag = (temp_ps_imag - temp_ns_imag) / sqrt(2);
+
+		prev_state = ((prev_state + increment) % mat_size);
 	}
 	return qr;
 }
@@ -268,13 +276,22 @@ quBit S(quBit x) {
 quReg* S_reg(quReg *qr, int idx) {
 	qr->qb[idx] = S(qr->qb[idx]);
 
-	for(int i = 0; i < pow(2, qr->size); i++) {
-		if((i & (1 << idx)) >> idx) {
-			double temp = qr->matrix[i].real;
-			qr->matrix[i].real = __round(-1 * qr->matrix[i].imag);
-			qr->matrix[i].imag = __round(temp);
-		}
-	}
+	int prev_state = (1 << idx);
+	int next_state;
+	int count = 0;
+
+
+	// for(int i = prev_state; count < pow(2, qr->size-1); i = next_state) {
+	// 	double temp = qr->matrix[i].real;
+	// 	qr->matrix[i].real = -1 * qr->matrix[i].imag;
+	// 	qr->matrix[i].imag = temp;
+
+	// 	next_state = (((prev_state >> (idx+1)) + 1) << (idx + 1)) + 1;
+	// 	prev_state = next_state;
+	// 	count++;
+	// }
+
+	// for()
 
 	return qr;
 }
@@ -291,26 +308,30 @@ quBit R(double angle, quBit x) {
 }
 
 quReg* R_reg(double angle, quReg *qr, int idx) {
-	int prev_state = get_prev_state(qr, idx);
-	int next_state = prev_state ^ (1 << idx);
+	// int prev_state = get_prev_state(qr, idx);
+	// int next_state = prev_state ^ (1 << idx);
 
-	printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
+	// printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
 
 	qr->qb[idx] = R(angle, qr->qb[idx]);
 
-	if(prev_state & (1 << idx)) {
-		qr->matrix[prev_state].real = qr->qb[idx].OCoeff.real;
-		qr->matrix[prev_state].imag = qr->qb[idx].OCoeff.imag;
+	int len = pow(2, qr->size);
 
-		qr->matrix[next_state].real = qr->qb[idx].ZCoeff.real;
-		qr->matrix[next_state].imag = qr->qb[idx].ZCoeff.imag;
-	} else {
-		qr->matrix[prev_state].real = qr->qb[idx].ZCoeff.real;
-		qr->matrix[prev_state].imag = qr->qb[idx].ZCoeff.imag;
+	// for(int i = 0; i < )
 
-		qr->matrix[next_state].real = qr->qb[idx].OCoeff.real;
-		qr->matrix[next_state].imag = qr->qb[idx].OCoeff.imag;
-	}
+	// if(prev_state & (1 << idx)) {
+	// 	qr->matrix[prev_state].real = qr->qb[idx].OCoeff.real;
+	// 	qr->matrix[prev_state].imag = qr->qb[idx].OCoeff.imag;
+
+	// 	qr->matrix[next_state].real = qr->qb[idx].ZCoeff.real;
+	// 	qr->matrix[next_state].imag = qr->qb[idx].ZCoeff.imag;
+	// } else {
+	// 	qr->matrix[prev_state].real = qr->qb[idx].ZCoeff.real;
+	// 	qr->matrix[prev_state].imag = qr->qb[idx].ZCoeff.imag;
+
+	// 	qr->matrix[next_state].real = qr->qb[idx].OCoeff.real;
+	// 	qr->matrix[next_state].imag = qr->qb[idx].OCoeff.imag;
+	// }
 
 	return qr;
 }
