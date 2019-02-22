@@ -276,22 +276,15 @@ quBit S(quBit x) {
 quReg* S_reg(quReg *qr, int idx) {
 	qr->qb[idx] = S(qr->qb[idx]);
 
-	int prev_state = (1 << idx);
-	int next_state;
-	int count = 0;
+	int size = pow(2, qr->size);
 
-
-	// for(int i = prev_state; count < pow(2, qr->size-1); i = next_state) {
-	// 	double temp = qr->matrix[i].real;
-	// 	qr->matrix[i].real = -1 * qr->matrix[i].imag;
-	// 	qr->matrix[i].imag = temp;
-
-	// 	next_state = (((prev_state >> (idx+1)) + 1) << (idx + 1)) + 1;
-	// 	prev_state = next_state;
-	// 	count++;
-	// }
-
-	// for()
+	for(int i = 0; i < size; i++) {
+		if(i & (1 << idx)) {
+			double temp = qr->matrix[i].real;
+			qr->matrix[i].real = -1 * qr->matrix[i].imag;
+			qr->matrix[i].imag = temp;
+		}
+	}
 
 	return qr;
 }
@@ -308,30 +301,20 @@ quBit R(double angle, quBit x) {
 }
 
 quReg* R_reg(double angle, quReg *qr, int idx) {
-	// int prev_state = get_prev_state(qr, idx);
-	// int next_state = prev_state ^ (1 << idx);
-
-	// printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
-
 	qr->qb[idx] = R(angle, qr->qb[idx]);
 
-	int len = pow(2, qr->size);
+	int size = pow(2, qr->size);
 
-	// for(int i = 0; i < )
+	printf("%lf\n", angle);
 
-	// if(prev_state & (1 << idx)) {
-	// 	qr->matrix[prev_state].real = qr->qb[idx].OCoeff.real;
-	// 	qr->matrix[prev_state].imag = qr->qb[idx].OCoeff.imag;
-
-	// 	qr->matrix[next_state].real = qr->qb[idx].ZCoeff.real;
-	// 	qr->matrix[next_state].imag = qr->qb[idx].ZCoeff.imag;
-	// } else {
-	// 	qr->matrix[prev_state].real = qr->qb[idx].ZCoeff.real;
-	// 	qr->matrix[prev_state].imag = qr->qb[idx].ZCoeff.imag;
-
-	// 	qr->matrix[next_state].real = qr->qb[idx].OCoeff.real;
-	// 	qr->matrix[next_state].imag = qr->qb[idx].OCoeff.imag;
-	// }
+	for(int i = 0; i < size; i++) {
+		if(i & (1 << idx)) {
+			double temp_real = qr->matrix[i].real;
+			double temp_imag = qr->matrix[i].imag;
+			qr->matrix[i].real = temp_real * cos(angle) - temp_imag * sin(angle);
+			qr->matrix[i].imag = temp_real * sin(angle) + temp_imag * cos(angle);
+		}
+	}
 
 	return qr;
 }
@@ -521,6 +504,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 					angle = angle * PI / 180;
 					qr = R_reg(angle, qr, gate_num);
 					gate_num = (gate_num+1) % qr->size;
+					angle = 0;
 				}
 				else if(gate_string[i] == '1') {
 					gate_num = (gate_num+1) % qr->size;
