@@ -42,7 +42,7 @@ int main(int argc, char const *argv[]) {
 	// Using string operations on the registers.
 	////////////////////////////////////////////////////////////////////////////////////////////
 	// {} - to define starting and ending of the quantum function.
-	// [] = to define starting and ending of the gate column.
+	// [] = to define starting and ending of the gate column  qubit sequence: [<n> <n-1> <n-2> ... <2> <1> <0>].
 	// () - to specify extra commands like printing the result mid-way of the quantum function.
 	////////////////////////////////////////////////////////////////////////////////////////////
 	// syntax: {(cmd_0), [gate_col_1(cmd_1)], [gate_col_2(cmd_2)], ... , [gate_col_n(cmd_n)]}
@@ -64,15 +64,15 @@ int main(int argc, char const *argv[]) {
 	//
 	//				  {  
 	// 				  	[
-	//					 Z_reg(qr, 0) ( Qprint("%r\n", qr2) ),
+	//					 Z_reg(qr, 2) ( Qprint("%r\n", qr2) ),
 	//					 X_reg(qr, 1) ( Qprint("%r\n", qr2) ),
-	//					 Y_reg(qr, 2) ( Qprint("%r\n", qr2) )
+	//					 Y_reg(qr, 0) ( Qprint("%r\n", qr2) )
 	//					],
 	//
 	//					[
-	//					 Y_reg(qr, 0) ( Qprint("%r\n", qr2) ),
+	//					 Y_reg(qr, 2) ( Qprint("%r\n", qr2) ),
 	//					 Y_reg(qr, 1) ( Qprint("%r\n", qr2) ),
-	//					 Y_reg(qr, 2) ( Qprint("%r\n", qr2) )
+	//					 Y_reg(qr, 0) ( Qprint("%r\n", qr2) )
 	//					],
 	//				  },
 	//

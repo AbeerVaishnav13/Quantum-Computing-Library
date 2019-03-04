@@ -105,14 +105,6 @@ int product(int a, int b) {
 
 Complex *mat;
 
-void Init_matrix(quReg *qr) {
-	mat = (newQuReg(qr->size)->matrix);
-}
-
-void updateMatrix(quReg *qr) {
-	mat = qr->matrix;
-}
-
 // Function Definitions
 //
 //
@@ -216,18 +208,6 @@ quReg* Y_reg(quReg *qr, int idx) {
 	return qr;
 }
 
-quBit H(quBit x) {
-	quBit qb = newQubit(0);
-
-	qb.ZCoeff.real = (x.ZCoeff.real + x.OCoeff.real) / sqrt(2);
-	qb.OCoeff.real = (x.ZCoeff.real - x.OCoeff.real) / sqrt(2);
-
-	qb.ZCoeff.imag = (x.ZCoeff.imag + x.OCoeff.imag) / sqrt(2);
-	qb.ZCoeff.imag = (x.ZCoeff.imag - x.OCoeff.imag) / sqrt(2);
-
-	return qb;
-}
-
 quBit S(quBit x) {
 	quBit qb = newQubit(0);
 
@@ -285,6 +265,18 @@ quReg* R_reg(double angle, quReg *qr, int idx) {
 	return qr;
 }
 
+quBit H(quBit x) {
+	quBit qb = newQubit(0);
+
+	qb.ZCoeff.real = (x.ZCoeff.real + x.OCoeff.real) / sqrt(2);
+	qb.OCoeff.real = (x.ZCoeff.real - x.OCoeff.real) / sqrt(2);
+
+	qb.ZCoeff.imag = (x.ZCoeff.imag + x.OCoeff.imag) / sqrt(2);
+	qb.ZCoeff.imag = (x.ZCoeff.imag - x.OCoeff.imag) / sqrt(2);
+
+	return qb;
+}
+
 void Hadamard(quReg *qr, int first, int second) {
 	double temp_ps_real, temp_ns_real, temp_ps_imag, temp_ns_imag;
 
@@ -318,8 +310,8 @@ quReg* H_reg(quReg *qr, int idx) {
 			first += first_cnt;
 			second = first + pow(2, idx);
 
-			if(first > size || second > size)
-				break;
+			// if(first > size || second > size)
+			// 	break;
 
 			Hadamard(qr, first, second);
 
@@ -397,14 +389,12 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 	int start_func = 0;
 	int text_start = 0;
 
-	int gate_num = 0;
+	int gate_num = qr->size - 1;
 
 	char msg[25] = "\0";
 	int msg_idx = 0;
 
 	int prev_H = 0;
-
-	Init_matrix(qr);
 
 	for(int i = 0; gate_string[i] != '\0'; i++) {
 		if(gate_string[i] == '(') {
@@ -445,7 +435,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 				start_col = 1;
 			else if(gate_string[i] == ']') {
 				start_col = 0;
-				gate_num = 0;
+				gate_num = qr->size - 1;
 			}
 
 			if(start_col) {
@@ -454,19 +444,19 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 				}
 				else if(gate_string[i] == 'X') {
 					qr = X_reg(qr, gate_num);
-					gate_num = (gate_num+1) % qr->size;
+					gate_num = (gate_num-1) % qr->size;
 				}
 				else if(gate_string[i] == 'Y') {
 					qr = Y_reg(qr, gate_num);
-					gate_num = (gate_num+1) % qr->size;
+					gate_num = (gate_num-1) % qr->size;
 				}
 				else if(gate_string[i] == 'Z') {
 					qr = Z_reg(qr, gate_num);
-					gate_num = (gate_num+1) % qr->size;
+					gate_num = (gate_num-1) % qr->size;
 				}
 				else if(gate_string[i] == 'H') {
 					qr = H_reg(qr, gate_num);
-					gate_num = (gate_num+1) % qr->size;
+					gate_num = (gate_num-1) % qr->size;
 				}
 				else if(gate_string[i] == 'S') {
 					if(gate_string[++i] == 'x') {
@@ -492,7 +482,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 						qr = S_reg(qr, gate_num);
 						i--;
 					}
-					gate_num = (gate_num+1) % qr->size;
+					gate_num = (gate_num-1) % qr->size;
 				}
 				else if(gate_string[i] == 'R') {
 					i += 2;
@@ -520,11 +510,11 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 					i--;
 					angle = angle * PI / 180;
 					qr = R_reg(angle, qr, gate_num);
-					gate_num = (gate_num+1) % qr->size;
+					gate_num = (gate_num-1) % qr->size;
 					angle = 0;
 				}
 				else if(gate_string[i] == '1') {
-					gate_num = (gate_num+1) % qr->size;
+					gate_num = (gate_num-1) % qr->size;
 				}
 			}
 		}
