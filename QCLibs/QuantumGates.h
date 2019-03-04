@@ -228,40 +228,6 @@ quBit H(quBit x) {
 	return qb;
 }
 
-quReg* H_reg(quReg *qr, int idx) {
-
-	qr->qb[idx] = H(qr->qb[idx]);
-
-	int increment = 1;
-	static int len = 0;
-	len = pow(2, len);
-	int mat_size = pow(2, qr->size);
-	int offset = pow(2, idx);
-	int next_state = 0;
-	int count = 0;
-
-	double temp_ps_real, temp_ns_real, temp_ps_imag, temp_ns_imag;
-
-	for(int prev_state = get_prev_state(qr, idx); count < len; count++) {
-		next_state = prev_state + offset;
-
-		temp_ps_real = qr->matrix[prev_state].real;
-		temp_ps_imag = qr->matrix[prev_state].imag;
-
-		temp_ns_real = qr->matrix[next_state].real;
-		temp_ns_imag = qr->matrix[next_state].imag;
-		
-		qr->matrix[prev_state].real = (temp_ps_real + temp_ns_real) / sqrt(2);
-		qr->matrix[next_state].real = (temp_ps_real - temp_ns_real) / sqrt(2);
-
-		qr->matrix[prev_state].imag = (temp_ps_imag + temp_ns_imag) / sqrt(2);
-		qr->matrix[next_state].imag = (temp_ps_imag - temp_ns_imag) / sqrt(2);
-
-		prev_state = ((prev_state + increment) % mat_size);
-	}
-	return qr;
-}
-
 quBit S(quBit x) {
 	quBit qb = newQubit(0);
 
@@ -319,25 +285,76 @@ quReg* R_reg(double angle, quReg *qr, int idx) {
 	return qr;
 }
 
+void Hadamard(quReg *qr, int first, int second) {
+	double temp_ps_real, temp_ns_real, temp_ps_imag, temp_ns_imag;
+
+	temp_ps_real = qr->matrix[first].real;
+	temp_ps_imag = qr->matrix[first].imag;
+
+	temp_ns_real = qr->matrix[second].real;
+	temp_ns_imag = qr->matrix[second].imag;
+	
+	qr->matrix[first].real = (temp_ps_real + temp_ns_real) / sqrt(2);
+	qr->matrix[second].real = (temp_ps_real - temp_ns_real) / sqrt(2);
+
+	qr->matrix[first].imag = (temp_ps_imag + temp_ns_imag) / sqrt(2);
+	qr->matrix[second].imag = (temp_ps_imag - temp_ns_imag) / sqrt(2);
+}
+
+quReg* H_reg(quReg *qr, int idx) {
+
+	qr->qb[idx] = H(qr->qb[idx]);
+
+	int first = 0, second = first + pow(2, idx);
+	int check_val = pow(2, idx);
+	int first_cnt = 0;
+	int size = pow(2, (qr->size - 1));
+
+	
+
+	for(first_cnt = 0; first_cnt < size; first_cnt++) {
+
+		if(idx > 0) {
+			first += first_cnt;
+			second = first + pow(2, idx);
+
+			if(first > size || second > size)
+				break;
+
+			Hadamard(qr, first, second);
+
+			if((first_cnt + 1) % check_val == 0)
+				first_cnt += (check_val-1);
+		}
+		else {
+			Hadamard(qr, first, second);
+
+			first += 2;
+			second = first + pow(2, idx);
+		}
+	}
+
+	
+	return qr;
+}
+
 void CNOT(quBit *x1, quBit *x2) {
 	quBit qb = newQubit(0);
 
-	if(x1->OCoeff.real == 1 && x1->OCoeff.imag == 0)
+	if(__round(fabs(x1->OCoeff.real)) > 0 || __round(fabs(x1->OCoeff.imag)) > 0)
 		qb = X(*x2);
 
 	*x2 = qb;
 }
 
 quReg* CNOT_reg(quReg *qr, int idx1, int idx2) {
-	int prev_state1, next_state1, prev_state2, next_state2;
-
-	prev_state1 = get_prev_state(qr, idx1);
-	prev_state2 = get_prev_state(qr, idx2);
-
-	// next_state1;
-	// next_state2;
-
 	CNOT(&qr->qb[idx1], &qr->qb[idx2]);
+
+	int size = pow(2, qr->size);
+
+	for(int i = 0; i < size; i++) {
+
+	}
 
 	return qr;
 }

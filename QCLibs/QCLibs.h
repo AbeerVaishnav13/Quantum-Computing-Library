@@ -39,6 +39,11 @@ double __round(double num) {
 	return (round(num * threshold) / threshold);
 }
 
+double mag(quReg *qr, int i) {
+	double mod = sqrt(pow(qr->matrix[i].real, 2) + pow(qr->matrix[i].imag, 2));
+    return (pow(mod, 2) * 100);
+}
+
 void print(quBit x) {
 	int flag0 = 0, flag1 = 0;
 
@@ -114,7 +119,7 @@ void Qprint(const char* format,...) {
 
     char buffer[33];
 
-    //Module 1: Initializing Myprintf's arguments 
+    //Module 1: Initializing Qprint's arguments 
     va_list arg;
     va_start(arg, format);
 
@@ -146,8 +151,7 @@ void Qprint(const char* format,...) {
 	        		  		}
 	        		  		printf(">");
 
-	        		  		double mod = sqrt(pow(QR->matrix[i].real, 2) + pow(QR->matrix[i].imag, 2));
-	        		  		printf("\t%0.3lf %%", (pow(mod, 2)/1*100));
+	        		  		printf("\t%0.3lf %%", mag(QR, i));
 	        		  	}
             		  }
             		  printf("\n");
@@ -167,8 +171,7 @@ void Qprint(const char* format,...) {
         		  		}
         		  		printf(">");
 
-        		  		double mod = sqrt(pow(QR->matrix[i].real, 2) + pow(QR->matrix[i].imag, 2));
-        		  		printf("\t%0.3lf %%", (pow(mod, 2)/1*100));
+        		  		printf("\t%0.3lf %%", mag(QR, i));
             		  }
             		  printf("\n");
             		  break;
