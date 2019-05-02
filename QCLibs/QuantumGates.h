@@ -96,15 +96,6 @@ int get_prev_state(quReg *qr, int idx) {
 	return prev_state;
 }
 
-int product(int a, int b) {
-	int i = a & b;
-	for(int j = 16; j > 0; j /= 2)
-		i = (i >> j) ^ i;
-	return (i % 2);
-}
-
-Complex *mat;
-
 // Function Definitions
 //
 //
@@ -346,26 +337,6 @@ void QSwap(quBit *x1, quBit *x2) {
 }
 
 quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
-	// int next_state, prev_state;
-	// // printf("idx1 = %d, idx2 = %d\n", idx1, idx2);
-
-	// prev_state = get_prev_state(qr, idx1);
-
-	// int test_idx1 = (prev_state ^ (1 << idx1)) >> idx1;
-	// int test_idx2 = (prev_state ^ (1 << idx2)) >> idx2;
-	// // printf("test_idx1 = %d, test_idx2 = %d\n", test_idx1, test_idx2);
-
-	// if(!(test_idx1 ^ test_idx2))
-	// 	next_state = prev_state;
-	// else if(test_idx1 ^ test_idx2)
-	// 	next_state = (prev_state ^ (1 << idx1)) ^ (1 << idx2);
-
-	// // printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
-
-	// Complex temp = qr->matrix[prev_state];
-	// qr->matrix[prev_state] = qr->matrix[next_state];
-	// qr->matrix[next_state] = temp;
-
 	QSwap(&qr->qb[idx1], &qr->qb[idx2]);
 
 	const int mat_size = pow(2, qr->size);
