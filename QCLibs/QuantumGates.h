@@ -297,32 +297,20 @@ quReg* H_reg(quReg *qr, int idx) {
 
 	qr->qb[idx] = H(qr->qb[idx]);
 
-	int first = 0, second = first + pow(2, idx);
-	int check_val = pow(2, idx);
-	int first_cnt = 0;
-	int size = pow(2, (qr->size - 1));
+	const int mat_size = pow(2, qr->size);
+	bool *visited = (bool*) malloc(mat_size * sizeof(bool));
 
-	
+	for(int i = 0; i < mat_size; i++)
+		visited[i] = false;
 
-	for(first_cnt = 0; first_cnt < size; first_cnt++) {
+	int first, second;
 
-		if(idx > 0) {
-			first += first_cnt;
-			second = first + pow(2, idx);
-
-			// if(first > size || second > size)
-			// 	break;
-
+	for(int i = 0; i < mat_size; i++) {
+		if(!visited[i]) {
+			first = i;
+			second = i ^ (1 << idx);
+			visited[first] = visited[second] = true;
 			Hadamard(qr, first, second);
-
-			if((first_cnt + 1) % check_val == 0)
-				first_cnt += (check_val-1);
-		}
-		else {
-			Hadamard(qr, first, second);
-
-			first += 2;
-			second = first + pow(2, idx);
 		}
 	}
 
@@ -489,7 +477,11 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 					int count = 0;
 					double angle;
 					int decimal = 0;
+					bool negative = false;
 					for(int j = 0; ; j++, i++) {
+						if(gate_string[i] == '-')
+							negative = true;
+
 						if(isalnum(gate_string[i])) {
 							if(!decimal) {
 								angle = angle * 10 + (gate_string[i] - '0');
@@ -509,6 +501,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 					}
 					i--;
 					angle = angle * PI / 180;
+					angle = negative ? -1 * angle : angle;
 					qr = R_reg(angle, qr, gate_num);
 					gate_num = (gate_num-1) % qr->size;
 					angle = 0;
