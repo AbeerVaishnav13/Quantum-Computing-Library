@@ -59,7 +59,7 @@ quReg* R_reg(double angle, quReg *qr, int idx);
 void CNOT(quBit *x1, quBit *x2);
 
 // For register of qubits
-quReg* CNOT_reg(quReg *qr, int idx1, int idx2);
+quReg* CNOT_reg(quReg *qr, int *idxs);
 
 // Quantum Swap Gate
 // Swaps the two qubits
@@ -318,14 +318,51 @@ void CNOT(quBit *x1, quBit *x2) {
 	*x2 = qb;
 }
 
-quReg* CNOT_reg(quReg *qr, int idx1, int idx2) {
-	CNOT(&qr->qb[idx1], &qr->qb[idx2]);
+quReg* CNOT_reg(quReg *qr, int *idxs) {
+	const int mat_size = pow(2, qr->size);
+	bool *visited = (bool*) malloc(mat_size * sizeof(bool));
+	int first, second;
 
-	int size = pow(2, qr->size);
+	for(int i = 0; i < mat_size; i++)
+		visited[i] = false;
 
-	for(int i = 0; i < size; i++) {
-
+	int ctrl;
+	for(int i = 0; i < qr->size; i++) {
+		if(idxs[i] == -1) {
+			ctrl = i;
+			break;
+		}
 	}
+
+	bool invert = false;
+
+	for(int i = 0; i < mat_size; i++) {
+		if((i & (1 << ctrl)) && (__round(fabs(qr->matrix[i].real)) > 0 || __round(fabs(qr->matrix[i].imag)) > 0)) {
+			invert = true;
+		}
+
+		if(invert) {
+			first = second = i;
+			for(int j = 0; j < qr->size; j++) {
+				if(idxs[j] == 1) {
+					CNOT(&qr->qb[ctrl], &qr->qb[j]);
+					second = second ^ (1 << j);
+				}
+			}
+
+			if(!visited[first] && !visited[second]) {
+				visited[first] = visited[second] = true;
+
+				Complex temp = qr->matrix[first];
+				qr->matrix[first] = qr->matrix[second];
+				qr->matrix[second] = temp;
+			}
+		}
+
+		invert = false;
+	}
+
+
 
 	return qr;
 }
@@ -498,6 +535,37 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 					qr = R_reg(angle, qr, gate_num);
 					gate_num = (gate_num-1) % qr->size;
 					angle = 0;
+				}
+				else if(gate_string[i] == 'C') {
+					i++;
+					int *idxs = (int*) malloc(qr->size * sizeof(int));
+					bool cnot = false;
+
+					for(int j = 0; j < qr->size; j++)
+						idxs[j] = 0;
+
+					if(gate_string[i] == 'o') {
+						idxs[gate_num] = -1;
+						cnot = true;
+					}
+					else if(gate_string[i] == 'x') {
+						idxs[gate_num] = 1;
+						cnot = true;
+					}
+
+					if(cnot) {
+						while(gate_string[++i] != ']') {
+							if(gate_string[i] == 'C' && gate_string[i+1] == 'o')
+								idxs[gate_num] = -1;
+							else if(gate_string[i] == 'C' && gate_string[i+1] == 'x')
+								idxs[gate_num] = 1;
+
+							if(gate_string[i] == ',')
+								gate_num = (gate_num-1) % qr->size;
+						}
+					}
+
+					CNOT_reg(qr, idxs);
 				}
 				else if(gate_string[i] == '1') {
 					gate_num = (gate_num-1) % qr->size;

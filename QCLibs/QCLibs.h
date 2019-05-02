@@ -111,7 +111,7 @@ void print(quBit x) {
 	}
 }
 
-void Qprint(const char* format,...) {
+void Qprint(const char* format, ...) {
 	const char *traverse;
     quBit qb;
     quBit *qr;
