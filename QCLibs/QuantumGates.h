@@ -346,36 +346,60 @@ void QSwap(quBit *x1, quBit *x2) {
 }
 
 quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
-	int next_state, prev_state;
-	printf("idx1 = %d, idx2 = %d\n", idx1, idx2);
+	// int next_state, prev_state;
+	// // printf("idx1 = %d, idx2 = %d\n", idx1, idx2);
 
-	prev_state = get_prev_state(qr, idx1);
+	// prev_state = get_prev_state(qr, idx1);
 
-	int test_idx1 = (prev_state ^ (1 << idx1)) >> idx1;
-	int test_idx2 = (prev_state ^ (1 << idx2)) >> idx2;
-	printf("test_idx1 = %d, test_idx2 = %d\n", test_idx1, test_idx2);
+	// int test_idx1 = (prev_state ^ (1 << idx1)) >> idx1;
+	// int test_idx2 = (prev_state ^ (1 << idx2)) >> idx2;
+	// // printf("test_idx1 = %d, test_idx2 = %d\n", test_idx1, test_idx2);
 
-	if(!(test_idx1 ^ test_idx2))
-		next_state = prev_state;
-	else if(test_idx1 ^ test_idx2)
-		next_state = (prev_state ^ (1 << idx1)) ^ (1 << idx2);
+	// if(!(test_idx1 ^ test_idx2))
+	// 	next_state = prev_state;
+	// else if(test_idx1 ^ test_idx2)
+	// 	next_state = (prev_state ^ (1 << idx1)) ^ (1 << idx2);
 
-	printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
+	// // printf("prev_state = %d, next_state = %d\n", prev_state, next_state);
+
+	// Complex temp = qr->matrix[prev_state];
+	// qr->matrix[prev_state] = qr->matrix[next_state];
+	// qr->matrix[next_state] = temp;
 
 	QSwap(&qr->qb[idx1], &qr->qb[idx2]);
 
-	Complex temp = qr->matrix[prev_state];
-	qr->matrix[prev_state] = qr->matrix[next_state];
-	qr->matrix[next_state] = temp;
+	const int mat_size = pow(2, qr->size);
+	bool *visited = (bool*) malloc(mat_size * sizeof(bool));
+	int state1, state2;
+	int first, second;
+
+	for(int i = 0; i < mat_size; i++)
+		visited[i] = false;
+
+	for(int i = 0; i < mat_size; i++) {
+		if(!visited[i]) {
+			state1 = (i & (1 << idx1)) >> idx1;
+			state2 = (i & (1 << idx2)) >> idx2;
+			first = i;
+			second = (i ^ (1 << idx1)) ^ (1 << idx2);
+			visited[first] = visited[second] = true;
+
+			if(state1 != state2) {
+				Complex temp = qr->matrix[first];
+				qr->matrix[first] = qr->matrix[second];
+				qr->matrix[second] = temp;
+			}
+		}
+	}
 
 	return qr;
 }
 
 
 quReg* applyGates_reg(const char* gate_string, quReg *qr) {
-	int start_col = 0;
-	int start_func = 0;
-	int text_start = 0;
+	bool start_col = false;
+	bool start_func = false;
+	bool text_start = false;
 
 	int gate_num = qr->size - 1;
 
@@ -390,12 +414,12 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 			if(gate_string[i] == 'T') {
 				i++;
 				while(gate_string[i] != ')') {
-					if((gate_string[i] == ' ' || gate_string[i] == ':') && text_start == 0) {
+					if((gate_string[i] == ' ' || gate_string[i] == ':') && text_start == false) {
 					}
 					else {
 						msg[msg_idx] = gate_string[i];
 						msg_idx++;
-						text_start = 1;
+						text_start = true;
 					}
 					i++;
 				}
@@ -414,15 +438,15 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 			}
 		}
 		else if(gate_string[i] == '{')
-			start_func = 1;
+			start_func = true;
 		else if(gate_string[i] == '}')
-			start_func = 0;
+			start_func = false;
 
 		else if(start_func) {
-			if(start_col == 0 && gate_string[i] == '[')
-				start_col = 1;
+			if(start_col == false && gate_string[i] == '[')
+				start_col = true;
 			else if(gate_string[i] == ']') {
-				start_col = 0;
+				start_col = false;
 				gate_num = qr->size - 1;
 			}
 
@@ -448,23 +472,21 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 				}
 				else if(gate_string[i] == 'S') {
 					if(gate_string[++i] == 'x') {
-						i += 2;
-						int idx1, idx2;
-						int switch_idx = 0;
-						for(int j = 0; ; i++) {
-							if(gate_string[i] == '/')
-								switch_idx = 1;
-							if(isalnum(gate_string[i])) {
-								if(!switch_idx)
-									idx1  = idx1 * 10 + (gate_string[i] - '0');
-								else if(switch_idx)
-									idx2  = idx2 * 10 + (gate_string[i] - '0');
-							}
+						int idx1, idx2 = -1;
+						idx1 = gate_num;
 
-							if(gate_string[i] == '(' || gate_string[i] == ',')
-								break;
+						while(gate_string[i++] != 'S' && gate_string[i+1] != 'x') {
+							if(gate_string[i] == ']') {
+								printf("[!] Invalid expression... There should be 2 swap gates together.\n");
+								printf("Exiting...\n");
+								exit(0);
+							}
+							else if (gate_string[i] == ',')
+								gate_num = (gate_num-1) % qr->size;
 						}
-						QSwap_reg(qr, 0, 1);
+
+						idx2 = gate_num;
+						QSwap_reg(qr, idx1, idx2);
 					}
 					else {
 						qr = S_reg(qr, gate_num);
