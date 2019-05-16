@@ -97,8 +97,6 @@ int get_prev_state(quReg *qr, int idx) {
 			prev_state <<= 1;
 	}
 
-
-
 	return prev_state;
 }
 
@@ -410,11 +408,11 @@ quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
 }
 
 quReg* QFT_reg(quReg *qr, int *idxs) {
-
+	return qr;
 }
 
 quReg* Inv_QFT_reg(quReg *qr, int *idxs) {
-	
+	return qr;
 }
 
 quReg* applyGates_reg(const char* gate_string, quReg *qr) {

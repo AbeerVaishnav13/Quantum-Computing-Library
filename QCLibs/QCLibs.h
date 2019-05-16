@@ -20,9 +20,11 @@ typedef struct qb {
 
 typedef struct qr {
 	quBit *qb;
-	size_t size;
+	unsigned short size;
 	Complex *matrix;
 }quReg;
+
+char format_str[25] = "";
 
 #define CHECK(test) ((test) ? 0:1)
 #define PI M_PI
@@ -111,8 +113,36 @@ void print(quBit x) {
 	}
 }
 
-char* setPrecision(double prec) {
-	// TODO: Write function to set precision of percentage in Qprint()
+void setPrecision(int prec) {
+	int temp1, temp2;
+	if(prec > 12)
+		temp1 = 12;
+	else
+		temp1 = prec;
+
+	temp2 = temp1;
+	int count = 0;
+	char *precision;
+
+	while(temp2 != 0) {
+		temp2 /= 10;
+		count++;
+	}
+
+	precision = (char*) malloc((count + 3) * sizeof(char));
+	precision[0] = '0';
+	precision[1] = '.';
+	precision[count + 2] = '\0';
+	
+	while(count > 0) {
+		precision[1 + count] = (temp1 % 10) + '0';
+		temp1 /= 10;
+		count--;
+	}
+
+	strcat(format_str, "\t%");
+	strcat(format_str, precision);
+	strcat(format_str, "lf %%");
 }
 
 void Qprint(const char* format, ...) {
@@ -156,7 +186,7 @@ void Qprint(const char* format, ...) {
 	        		  		}
 	        		  		printf(">");
 
-	        		  		printf("\t%0.15lf %%", mag(QR, i));
+	        		  		printf(format_str, mag(QR, i));
 	        		  	}
             		  }
             		  printf("\n");
@@ -176,7 +206,7 @@ void Qprint(const char* format, ...) {
         		  		}
         		  		printf(">");
 
-        		  		printf("\t%0.15lf %%", mag(QR, i));
+        		  		printf(format_str, mag(QR, i));
             		  }
             		  printf("\n");
             		  break;
