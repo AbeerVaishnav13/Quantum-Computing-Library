@@ -69,6 +69,12 @@ void QSwap(quBit *x1, quBit *x2);
 // For register of qubits
 quReg* QSwap_reg(quReg *qr, int idx1, int idx2);
 
+// Quantum Fourier Transform Gate
+quReg* QFT_reg(quReg *qr, int *idxs);
+
+// Inverse Quantum Fourier Transform Gate
+quReg* Inv_QFT_reg(quReg *qr, int *idxs);
+
 
 // Short-hand for applying gates to registers
 quReg* applyGates_reg(const char* gate_string, quReg *qr);
@@ -403,6 +409,13 @@ quReg* QSwap_reg(quReg *qr, int idx1, int idx2) {
 	return qr;
 }
 
+quReg* QFT_reg(quReg *qr, int *idxs) {
+
+}
+
+quReg* Inv_QFT_reg(quReg *qr, int *idxs) {
+	
+}
 
 quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 	bool start_col = false;

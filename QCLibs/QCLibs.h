@@ -111,6 +111,10 @@ void print(quBit x) {
 	}
 }
 
+char* setPrecision(double prec) {
+	// TODO: Write function to set precision of percentage in Qprint()
+}
+
 void Qprint(const char* format, ...) {
 	const char *traverse;
     quBit qb;
@@ -152,7 +156,7 @@ void Qprint(const char* format, ...) {
 	        		  		}
 	        		  		printf(">");
 
-	        		  		printf("\t%0.3lf %%", mag(QR, i));
+	        		  		printf("\t%0.15lf %%", mag(QR, i));
 	        		  	}
             		  }
             		  printf("\n");
@@ -172,7 +176,7 @@ void Qprint(const char* format, ...) {
         		  		}
         		  		printf(">");
 
-        		  		printf("\t%0.3lf %%", mag(QR, i));
+        		  		printf("\t%0.15lf %%", mag(QR, i));
             		  }
             		  printf("\n");
             		  break;
