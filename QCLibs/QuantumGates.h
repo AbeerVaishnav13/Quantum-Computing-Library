@@ -79,27 +79,6 @@ quReg* Inv_QFT_reg(quReg *qr, int *idxs);
 // Short-hand for applying gates to registers
 quReg* applyGates_reg(const char* gate_string, quReg *qr);
 
-
-
-// Also some helper functions...
-int get_prev_state(quReg *qr, int idx) {
-	int prev_state = 0;
-
-	for(int i = qr->size-1; i >= 0; i--) {
-		if((fabs(__round(qr->qb[i].ZCoeff.real)) > 0) || (fabs(__round(qr->qb[i].ZCoeff.imag)) > 0)) {
-			prev_state |= 0;
-		}
-		else if((fabs(__round(qr->qb[i].OCoeff.real)) > 0) || (fabs(__round(qr->qb[i].OCoeff.imag)) > 0)) {
-			prev_state |= 1;
-		}
-
-		if(i > 0)
-			prev_state <<= 1;
-	}
-
-	return prev_state;
-}
-
 // Function Definitions
 //
 //
@@ -120,17 +99,21 @@ quBit X(quBit x) {
 }
 
 quReg* X_reg(quReg *qr, int idx) {
-	int prev_state = 0, next_state = 0;
-
-	prev_state = get_prev_state(qr, idx);
-
-	next_state = prev_state ^ (1 << idx);
+	int prev_state = -1, next_state = -1;
+	int i, size = pow(2, qr->size);
 
 	qr->qb[idx] = X(qr->qb[idx]);
 
-	double temp = qr->matrix[prev_state].real;
-	qr->matrix[prev_state].real = qr->matrix[next_state].real;
-	qr->matrix[next_state].real = temp;
+	for(i = 0; i < size; i++) {
+		if((i & (1 << idx)) == 0) {
+			prev_state = i;
+			next_state = prev_state ^ (1 << idx);
+
+			Complex temp = qr->matrix[prev_state];
+			qr->matrix[prev_state] = qr->matrix[next_state];
+			qr->matrix[next_state] = temp;
+		}
+	}
 
 	return qr;
 }
@@ -147,25 +130,14 @@ quBit Z(quBit x) {
 }
 
 quReg* Z_reg(quReg *qr, int idx) {
-	int prev_state = 0, next_state = 0;
-
-	prev_state = get_prev_state(qr, idx);
-
-	next_state = prev_state ^ (1 << idx);
-
-	double mod_p = sqrt(pow(qr->matrix[prev_state].real, 2) + pow(qr->matrix[prev_state].imag, 2));
-	double mod_n = sqrt(pow(qr->matrix[next_state].real, 2) + pow(qr->matrix[next_state].imag, 2));;
+	int i, size = pow(2, qr->size);
 
 	qr->qb[idx] = Z(qr->qb[idx]);
 
-	if(fabs(__round(qr->qb[idx].OCoeff.real)) > 0 || fabs(__round(qr->qb[idx].OCoeff.imag)) > 0) {
-		if(mod_n > 0) {
-			qr->matrix[next_state].real *= -1;
-			qr->matrix[next_state].imag *= -1;
-		}
-		else if(mod_p > 0) {
-			qr->matrix[prev_state].real *= -1;
-			qr->matrix[prev_state].imag *= -1;
+	for(i = 0; i < size; i++) {
+		if((i & (1 << idx)) > 0) {
+			qr->matrix[i].real *= -1;
+			qr->matrix[i].imag *= -1;
 		}
 	}
 
@@ -185,20 +157,26 @@ quBit Y(quBit x) {
 }
 
 quReg* Y_reg(quReg *qr, int idx) {
+	// TODO: modify this for multiple qubits like X_reg
 	int prev_state = 0, next_state = 0;
-
-	prev_state = get_prev_state(qr, idx);
-	next_state = prev_state ^ (1 << idx);
+	int i, size = pow(2, qr->size);
 
 	qr->qb[idx] = Y(qr->qb[idx]);
 
-	double t = qr->matrix[prev_state].real;
-	qr->matrix[prev_state].real = -1 * qr->matrix[next_state].imag;
-	qr->matrix[next_state].imag = t;
+	printf("\n");
 
-	t = qr->matrix[prev_state].imag;
-	qr->matrix[prev_state].imag = -1 * qr->matrix[next_state].real;
-	qr->matrix[next_state].real = t;
+	for(i = 0; i < size; i++) {
+		if((i & (1 << idx)) == 0) {
+			prev_state = i;
+			next_state = prev_state ^ (1 << idx);
+
+			Complex temp_ps = {qr->matrix[next_state].imag, -1 * qr->matrix[next_state].real};
+			Complex temp_ns = {-1 * qr->matrix[prev_state].imag, qr->matrix[prev_state].real};
+
+			qr->matrix[prev_state] = temp_ps;
+			qr->matrix[next_state] = temp_ns;
+		}
+	}
 
 	return qr;
 }
@@ -420,7 +398,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 	bool start_func = false;
 	bool text_start = false;
 
-	int gate_num = qr->size - 1;
+	int gate_num = 0;
 
 	char msg[25] = "\0";
 	int msg_idx = 0;
@@ -466,7 +444,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 				start_col = true;
 			else if(gate_string[i] == ']') {
 				start_col = false;
-				gate_num = qr->size - 1;
+				gate_num = 0;
 			}
 
 			if(start_col) {
@@ -475,19 +453,19 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 				}
 				else if(gate_string[i] == 'X') {
 					qr = X_reg(qr, gate_num);
-					gate_num = (gate_num-1) % qr->size;
+					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'Y') {
 					qr = Y_reg(qr, gate_num);
-					gate_num = (gate_num-1) % qr->size;
+					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'Z') {
 					qr = Z_reg(qr, gate_num);
-					gate_num = (gate_num-1) % qr->size;
+					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'H') {
 					qr = H_reg(qr, gate_num);
-					gate_num = (gate_num-1) % qr->size;
+					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'S') {
 					if(gate_string[++i] == 'x') {
@@ -501,7 +479,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 								exit(0);
 							}
 							else if (gate_string[i] == ',')
-								gate_num = (gate_num-1) % qr->size;
+								gate_num = (gate_num+1) % qr->size;
 						}
 
 						idx2 = gate_num;
@@ -511,7 +489,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 						qr = S_reg(qr, gate_num);
 						i--;
 					}
-					gate_num = (gate_num-1) % qr->size;
+					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == 'R') {
 					i += 2;
@@ -544,7 +522,7 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 					angle = angle * PI / 180;
 					angle = negative ? -1 * angle : angle;
 					qr = R_reg(angle, qr, gate_num);
-					gate_num = (gate_num-1) % qr->size;
+					gate_num = (gate_num+1) % qr->size;
 					angle = 0;
 				}
 				else if(gate_string[i] == 'C') {
@@ -572,14 +550,15 @@ quReg* applyGates_reg(const char* gate_string, quReg *qr) {
 								idxs[gate_num] = 1;
 
 							if(gate_string[i] == ',')
-								gate_num = (gate_num-1) % qr->size;
+								gate_num = (gate_num+1) % qr->size;
 						}
 					}
 
 					CNOT_reg(qr, idxs);
+					gate_num = (gate_num+1) % qr->size;
 				}
 				else if(gate_string[i] == '1') {
-					gate_num = (gate_num-1) % qr->size;
+					gate_num = (gate_num+1) % qr->size;
 				}
 			}
 		}
