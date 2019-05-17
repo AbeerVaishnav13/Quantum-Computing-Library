@@ -157,13 +157,10 @@ quBit Y(quBit x) {
 }
 
 quReg* Y_reg(quReg *qr, int idx) {
-	// TODO: modify this for multiple qubits like X_reg
 	int prev_state = 0, next_state = 0;
 	int i, size = pow(2, qr->size);
 
 	qr->qb[idx] = Y(qr->qb[idx]);
-
-	printf("\n");
 
 	for(i = 0; i < size; i++) {
 		if((i & (1 << idx)) == 0) {

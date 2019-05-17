@@ -12,5 +12,21 @@ int main(int argc, char const *argv[]) {
 	x = H(x);
 	Qprint("x = %q\n", x);	
 
+	//Using quRegisters
+	quReg *qr = newQuReg(2);
+
+	char gate_string[] = "(T: quReg2 = ), \
+							(Pa), \
+							{\
+								[H, H] \
+								(Pa) \
+								[H, 1] \
+								(Pa) \
+								[1, H] \
+							}, \
+							(Pa)";
+
+	qr = applyGates_reg(gate_string, qr);
+
 	return 0;
 }

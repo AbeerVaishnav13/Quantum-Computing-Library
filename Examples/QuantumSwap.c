@@ -14,6 +14,21 @@ int main(int argc, char const *argv[]) {
 
 	QSwap(&qb1, &qb2);
 	Qprint("qb1 = %q, qb2 = %q\n", qb1, qb2);
+	
+
+	//Using quRegisters
+	quReg *qr = newQuReg(2);
+
+	char gate_string[] = "(T: quReg2 = ), \
+							(Pa), \
+							{\
+								[H, 1] \
+								(Pnz) \
+								[Sx, Sx] \
+							}, \
+							(Pnz)";
+
+	qr = applyGates_reg(gate_string, qr);
 
 	return 0;
 }

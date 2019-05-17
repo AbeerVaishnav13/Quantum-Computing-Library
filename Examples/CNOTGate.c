@@ -18,5 +18,23 @@ int main(int argc, char const *argv[]) {
 	CNOT(&x, &y);
 	Qprint("x = %q, y = %q\n", x, y);
 
+
+
+	// Using quRegisters
+	quReg *qr = newQuReg(2);
+
+	char gate_string[] = "(T: quReg2 = ), \
+							(Pa), \
+							{\
+								[H, 1] \
+								(Pa) \
+								[Co, Cx] \
+								(Pa) \
+								[1, H] \
+							}, \
+							(Pa)";
+
+	qr = applyGates_reg(gate_string, qr);
+
 	return 0;
 }

@@ -24,7 +24,7 @@ typedef struct qr {
 	Complex *matrix;
 }quReg;
 
-char format_str[25] = "";
+char *format_str;
 
 #define CHECK(test) ((test) ? 0:1)
 #define PI M_PI
@@ -32,6 +32,7 @@ char format_str[25] = "";
 double __round(double num);
 void print(quBit x);
 void Qprint(const char* format, ...);
+void setPrecision(int prec);
 
 #include "QuantumMemAlloc.h"
 #include "QuantumGates.h"
@@ -140,9 +141,13 @@ void setPrecision(int prec) {
 		count--;
 	}
 
-	strcat(format_str, "\t%");
-	strcat(format_str, precision);
-	strcat(format_str, "lf %%");
+	char *format = (char*) malloc(25 * sizeof(char));
+
+	strcat(format, "\t%");
+	strcat(format, precision);
+	strcat(format, "lf %%");
+
+	format_str = format;
 }
 
 void Qprint(const char* format, ...) {

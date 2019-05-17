@@ -57,6 +57,8 @@ quReg* newQuReg(size_t n) {
 		qr->matrix[i].real = qr->matrix[i].imag = 0;
 	}
 
+	setPrecision(2);
+
 	return qr;
 }
 
